@@ -376,6 +376,7 @@ func hardwareArgs(id, dir string, spec vm.Spec, nics []string) []string {
 	} else if spec.Firmware != "" {
 		args = append(args, "--firmware", strings.ToLower(spec.Firmware))
 	}
+	args = append(args, "--paravirt-provider", "hyperv")
 	args = append(args, nics...)
 	if spec.CloudInit != nil {
 		args = append(args, "--uart1", "0x3F8", "4", "--uartmode1", "file", filepath.Join(dir, serialName))
@@ -603,7 +604,7 @@ func (p *Provider) Delete(ctx context.Context, ref string) error {
 	if _, err := p.run(ctx, "unregistervm", info.id(), "--delete"); err != nil {
 		var cmdErr *vm.CommandError
 		if errors.As(err, &cmdErr) && strings.Contains(cmdErr.Stderr, "child media") {
-			return fmt.Errorf("delete vm %s: it is the parent of linked clones, delete them first: %w", info.name(), err)
+			return fmt.Errorf("delete vm %s: its disks have child media from linked clones or an interrupted snapshot; delete the clones or close the leftover media first: %w", info.name(), err)
 		}
 		return fmt.Errorf("delete vm %s: %w", info.name(), err)
 	}

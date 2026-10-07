@@ -155,6 +155,9 @@ func (m *Manager) applySpecDefaults(spec *vm.Spec) error {
 		spec.DiskGB = cmp.Or(spec.DiskGB, d.DiskGB)
 		spec.OSType = cmp.Or(spec.OSType, d.OSType)
 	}
+	if len(spec.NICs) == 0 {
+		spec.NICs = []vm.NIC{{Mode: vm.NetNAT}}
+	}
 	return m.cfg.Limits.check(spec.CPUs, spec.MemoryMB, spec.DiskGB)
 }
 

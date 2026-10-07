@@ -135,6 +135,22 @@ func TestCreateApplianceKeepsItsOwnSizing(t *testing.T) {
 	}
 }
 
+func TestCreateApplianceGetsTheDefaultNATNic(t *testing.T) {
+	ova := writeFile(t, filepath.Join(t.TempDir(), "noble.ova"), "ova")
+	rec := &recorder{Provider: memprovider.New(vm.VirtualBox)}
+	m := newManager(t, Config{}, rec)
+	got, err := m.Create(t.Context(), vm.Spec{Name: "imported", Appliance: ova, CloudInit: &vm.CloudInit{}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if nics := rec.last(t).NICs; len(nics) != 1 || nics[0].Mode != vm.NetNAT {
+		t.Fatalf("appliance nics = %+v, want the documented single nat nic instead of the appliance's own network", nics)
+	}
+	if !slices.ContainsFunc(got.PortForwards, func(pf vm.PortForward) bool { return pf.GuestPort == 22 }) {
+		t.Fatalf("no ssh forward for a cloud-init appliance: %+v", got.PortForwards)
+	}
+}
+
 func TestCreateMakesHostPathsAbsolute(t *testing.T) {
 	dir := t.TempDir()
 	writeFile(t, filepath.Join(dir, "boot.iso"), "iso")

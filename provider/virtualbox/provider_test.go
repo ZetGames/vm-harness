@@ -443,7 +443,7 @@ func TestTakeSnapshot(t *testing.T) {
 		err              error
 	}{
 		{"stopped", "showvminfo-stopped.txt", "", "snapshot " + demoID + " take s9", nil},
-		{"running", "showvminfo-running.txt", "before upgrade", "snapshot " + demoID + " take s9 --description before upgrade --live", nil},
+		{"running", "showvminfo-running.txt", "before upgrade", "snapshot " + demoID + " take s9 --description before upgrade", nil},
 		{"duplicate", "showvminfo-stopped.txt", "", "", vm.ErrExists},
 	}
 	for _, c := range cases {

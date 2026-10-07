@@ -95,9 +95,6 @@ func (p *Provider) TakeSnapshot(ctx context.Context, ref, name, description stri
 	if description != "" {
 		args = append(args, "--description", description)
 	}
-	if info.state() == vm.StateRunning {
-		args = append(args, "--live")
-	}
 	_, err = p.run(ctx, args...)
 	return err
 }
