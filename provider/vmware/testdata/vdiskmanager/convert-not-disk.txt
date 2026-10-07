@@ -1,0 +1,1 @@
+Failed to convert disk: The specified file is not a virtual disk (0x3ebf).

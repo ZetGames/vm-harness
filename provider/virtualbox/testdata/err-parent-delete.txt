@@ -1,0 +1,5 @@
+0%...10%...20%...30%...VBOX_E_OBJECT_IN_USE
+VBoxManage.exe: error: Machine delete failed
+VBoxManage.exe: error: Cannot close medium 'C:\vms\demo-1\demo-1-disk0.vdi' because it has 1 child media
+VBoxManage.exe: error: Details: code VBOX_E_OBJECT_IN_USE (0x80bb000c), component MediumWrap, interface IMedium
+VBoxManage.exe: error: Context: "enum RTEXITCODE __cdecl handleUnregisterVM(struct HandlerArg *)" at line 243 of file VBoxManageMisc.cpp

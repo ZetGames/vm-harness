@@ -1,0 +1,18 @@
+UUID:           09dd50f1-6f1f-4b2e-ab11-86b57ee9fe1e
+Parent UUID:    base
+State:          created
+Type:           normal (base)
+Location:       C:\vms\demo-1\demo-1-disk0.vdi
+Storage format: VDI
+Capacity:       32 MBytes
+Encryption:     disabled
+
+UUID:           1a67f659-810e-441b-89ea-41150425146f
+Parent UUID:    base
+State:          created
+Type:           normal (base)
+Location:       C:\vms\demo-1\demo-1-disk1.vmdk
+Storage format: VMDK
+Capacity:       16 MBytes
+Encryption:     disabled
+

@@ -1,0 +1,38 @@
+Supported guest OS types:
+
+ID / Description: Other -- Other/Unknown
+Family:           Other (Other)
+Architecture:     x86
+
+ID / Description: Other_64 -- Other/Unknown (64-bit)
+Family:           Other (Other)
+Architecture:     x86 (64-bit)
+
+ID / Description: Windows10_64 -- Windows 10 (64-bit)
+Family:           Windows (Microsoft Windows)
+Architecture:     x86 (64-bit)
+
+ID / Description: Windows11_64 -- Windows 11 (64-bit)
+Family:           Windows (Microsoft Windows)
+Architecture:     x86 (64-bit)
+
+ID / Description: Windows2022_64 -- Windows Server 2022 (64-bit)
+Family:           Windows (Microsoft Windows)
+Architecture:     x86 (64-bit)
+
+ID / Description: WindowsNT_64 -- Other Windows (64-bit)
+Family:           Windows (Microsoft Windows)
+Architecture:     x86 (64-bit)
+
+ID / Description: Linux26_64 -- Linux 2.6 / 3.x / 4.x / 5.x (64-bit)
+Family:           Linux / Linux 2.6 (Linux)
+Architecture:     x86 (64-bit)
+
+ID / Description: Debian12_64 -- Debian 12 Bookworm (64-bit)
+Family:           Linux / Debian (Linux)
+Architecture:     x86 (64-bit)
+
+ID / Description: Ubuntu_64 -- Ubuntu (64-bit)
+Family:           Linux / Ubuntu (Linux)
+Architecture:     x86 (64-bit)
+

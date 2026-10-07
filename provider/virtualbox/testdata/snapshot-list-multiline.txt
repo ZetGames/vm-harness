@@ -1,0 +1,12 @@
+SnapshotName="s1"
+SnapshotUUID="fd5d2e6b-be95-45e8-9760-4f28f551cbf2"
+SnapshotName-1="s2"
+SnapshotUUID-1="7fbb1912-7270-43b2-b91e-351dd3584762"
+SnapshotDescription-1="second snapshot"
+SnapshotName-2="s3"
+SnapshotUUID-2="4edf60df-5090-4366-9eca-7c6268cc8fe3"
+SnapshotDescription-2="line1
+line2 "quoted" \ back"
+CurrentSnapshotName="s3"
+CurrentSnapshotUUID="4edf60df-5090-4366-9eca-7c6268cc8fe3"
+CurrentSnapshotNode="SnapshotName-2"

@@ -1,0 +1,2 @@
+Creating disk 'C:\vms\web\web.vmdk'
+Virtual disk creation successful.

@@ -1,0 +1,1 @@
+Error: Anonymous guest operations are not allowed on this virtual machine. You must call VixVM_LoginInGuest before performing guest operations

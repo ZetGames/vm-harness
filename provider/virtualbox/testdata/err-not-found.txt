@@ -1,0 +1,3 @@
+VBoxManage.exe: error: Could not find a registered machine named 'demo-nonexistent'
+VBoxManage.exe: error: Details: code VBOX_E_OBJECT_NOT_FOUND (0x80bb0001), component VirtualBoxWrap, interface IVirtualBox, callee IUnknown
+VBoxManage.exe: error: Context: "FindMachine(Bstr(VMNameOrUuid).raw(), machine.asOutParam())" at line 3249 of file VBoxManageInfo.cpp

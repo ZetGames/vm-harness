@@ -1,0 +1,3 @@
+VBoxManage.exe: error: Could not find a snapshot named 'nosuch'
+VBoxManage.exe: error: Details: code VBOX_E_OBJECT_NOT_FOUND (0x80bb0001), component SessionMachine, interface IMachine, callee IUnknown
+VBoxManage.exe: error: Context: "FindSnapshot(Bstr(a->argv[2]).raw(), pSnapshot.asOutParam())" at line 538 of file VBoxManageSnapshot.cpp

@@ -1,0 +1,5 @@
+0%...VBOX_E_NOT_SUPPORTED
+VBoxManage.exe: error: Failed to resize medium
+VBoxManage.exe: error: Shrinking is not yet supported for medium 'C:\vms\demo-src\demo-src.vdi'
+VBoxManage.exe: error: Details: code VBOX_E_NOT_SUPPORTED (0x80bb0009), component MediumWrap, interface IMedium
+VBoxManage.exe: error: Context: "enum RTEXITCODE __cdecl handleModifyMedium(struct HandlerArg *)" at line 937 of file VBoxManageDisk.cpp

@@ -1,0 +1,1 @@
+Machine has been successfully cloned as "demo-2"

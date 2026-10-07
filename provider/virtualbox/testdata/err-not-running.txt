@@ -1,0 +1,1 @@
+VBoxManage.exe: error: Machine 'demo-1' is not currently running.

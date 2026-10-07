@@ -1,0 +1,35 @@
+Interpreting C:\ova\app.ova...
+OK.
+Virtual system 0:
+ 0: Suggested OS type: "Other"
+    (change with "--vsys 0 --ostype <type>"; use "list ostypes" to list all possible values)
+ 1: VM name specified with --vmname: "app"
+ 2: Suggested VM group "/"
+    (change with "--vsys 0 --group <group>")
+ 3: VM settings file name specified with --settingsfile: "C:\vms\app\app.vbox"
+ 4: VM base folder specified with --basefolder: "C:\vms"
+ 5: Number of CPUs: 1
+    (change with "--vsys 0 --cpus <n>")
+ 6: Guest memory: 1024 MB
+    (change with "--vsys 0 --memory <MB>")
+ 7: Sound card (appliance expects "", can change on import)
+    (disable with "--vsys 0 --unit 7 --ignore")
+ 8: Network adapter: orig NAT, config 3, extra slot=0;type=NAT
+Virtual system 1:
+ 0: Suggested OS type: "Debian_64"
+    (change with "--vsys 1 --ostype <type>"; use "list ostypes" to list all possible values)
+ 1: Suggested VM name "demo-2 1"
+    (change with "--vsys 1 --vmname <name>")
+ 2: Suggested VM group "/"
+    (change with "--vsys 1 --group <group>")
+ 3: Suggested VM settings file name "C:\Users\demo\VirtualBox VMs\demo-2 1\demo-2 1.vbox"
+    (change with "--vsys 1 --settingsfile <filename>")
+ 4: Suggested VM base folder "C:\Users\demo\VirtualBox VMs"
+    (change with "--vsys 1 --basefolder <path>")
+ 5: Number of CPUs: 1
+    (change with "--vsys 1 --cpus <n>")
+ 6: Guest memory: 1024 MB
+    (change with "--vsys 1 --memory <MB>")
+ 7: Sound card (appliance expects "", can change on import)
+    (disable with "--vsys 1 --unit 7 --ignore")
+ 8: Network adapter: orig NAT, config 3, extra slot=0;type=NAT

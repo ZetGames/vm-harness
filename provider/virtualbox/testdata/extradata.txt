@@ -1,0 +1,3 @@
+Key: vmh/managed, Value: 1
+Key: vmh/meta, Value: {"a":"b c","n":1}
+Key: vmh/owner, Value: agent one

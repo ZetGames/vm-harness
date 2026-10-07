@@ -1,0 +1,3 @@
+Creating disk 'C:\vms\web\x-conv.vmdk'
+  Convert: 100% done.
+Virtual disk conversion successful.

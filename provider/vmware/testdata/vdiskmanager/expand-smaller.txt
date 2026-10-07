@@ -1,0 +1,1 @@
+Failed to expand the disk 'C:\vms\web\x-conv.vmdk': One of the parameters supplied is invalid (0x3e80).

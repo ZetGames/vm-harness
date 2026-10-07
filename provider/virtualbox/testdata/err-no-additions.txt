@@ -1,0 +1,3 @@
+VBoxManage.exe: error: Guest Additions are not installed or not ready (yet)
+VBoxManage.exe: error: Details: code VBOX_E_GSTCTL_GUEST_ERROR (0x80bb000f), component GuestWrap, interface IGuest, callee IUnknown
+VBoxManage.exe: error: Context: "CreateSession(Bstr(pCtx->strUsername).raw(), Bstr(pCtx->strPassword).raw(), Bstr(pCtx->strDomain).raw(), Bstr(pszSessionName).raw(), pCtx->pGuestSession.asOutParam())" at line 751 of file VBoxManageGuestCtrl.cpp

@@ -1,0 +1,1 @@
+Error: Cannot open VM: C:\vms\broken\broken.vmx, Cannot read the virtual machine configuration file

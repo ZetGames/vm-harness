@@ -1,0 +1,7 @@
+  Grow: 100% done.
+Disk expansion completed successfully.
+
+WARNING: If the virtual disk is partitioned, you must use a third-party
+         utility in the virtual machine to expand the size of the
+         partitions. For more information, see:
+         http://www.vmware.com/support/kb/enduser/std_adp.php?p_faqid=1647

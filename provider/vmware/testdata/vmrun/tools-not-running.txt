@@ -1,0 +1,1 @@
+Error: The VMware Tools are not running in the virtual machine: C:\vms\web\web.vmx

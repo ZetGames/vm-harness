@@ -1,0 +1,6 @@
+Key: GUI/LastCloseAction, Value: PowerOff
+Key: VBoxInternal/Devices/serial/0/LUN#0/AttachedDriver/Config/Location, Value: C:\Users\demo\Documents\victim.txt
+Key: VBoxInternal/Devices/serial/0/LUN#0/AttachedDriver/Driver, Value: RawFile
+Key: VBoxInternal/Devices/serial/0/LUN#0/Driver, Value: Char
+Key: VBoxInternal2/SharedFoldersEnableSymlinksCreate/hostshare, Value: 1
+Key: vmh/managed, Value: 0b3e4233-7102-4087-bbd8-2ea3a0f123a4

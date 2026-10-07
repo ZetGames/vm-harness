@@ -1,0 +1,3 @@
+VBoxManage.exe: error: The machine 'demo-1' is already locked for a session (or being unlocked)
+VBoxManage.exe: error: Details: code VBOX_E_INVALID_OBJECT_STATE (0x80bb0007), component MachineWrap, interface IMachine, callee IUnknown
+VBoxManage.exe: error: Context: "LockMachine(a->session, LockType_Write)" at line 901 of file VBoxManageModifyVM.cpp

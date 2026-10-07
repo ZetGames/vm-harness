@@ -1,0 +1,6 @@
+Opening OVA source: C:\images\web.ova
+The manifest validates
+Opening VMX target: C:\vms\app\app.vmx
+Writing VMX file: C:\vms\app\app.vmx
+Disk progress: 1%Disk progress: 96%Disk progress: 97%Disk progress: 99%Transfer Completed                    
+Completed successfully

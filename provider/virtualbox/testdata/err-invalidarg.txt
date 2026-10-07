@@ -1,0 +1,2 @@
+VBoxManage.exe: error: Code E_INVALIDARG (0x80070057) (extended info not available)
+VBoxManage.exe: error: Context: "RemoveRedirect(Bstr(a->argv[3]).raw())" at line 961 of file VBoxManageControlVM.cpp

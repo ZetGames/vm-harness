@@ -1,0 +1,3 @@
+VBoxManage.exe: error: Medium 'C:\vms\demo-3b\demo-2-disk001.vmdk' cannot be closed because it is still attached to 1 virtual machines
+VBoxManage.exe: error: Details: code VBOX_E_OBJECT_IN_USE (0x80bb000c), component MediumWrap, interface IMedium, callee IUnknown
+VBoxManage.exe: error: Context: "Close()" at line 1877 of file VBoxManageDisk.cpp

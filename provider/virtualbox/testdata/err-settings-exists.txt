@@ -1,0 +1,3 @@
+VBoxManage.exe: error: Machine settings file 'C:\vms\demo-1\demo-1.vbox' already exists
+VBoxManage.exe: error: Details: code VBOX_E_FILE_ERROR (0x80bb0004), component MachineWrap, interface IMachine, callee IUnknown
+VBoxManage.exe: error: Context: "CreateMachine(bstrSettingsFile.raw(), bstrName.raw(), platformArch, ComSafeArrayAsInParam(groups), bstrOsTypeId.raw(), createFlags.raw(), bstrCipher.raw(), bstrPasswordId.raw(), Bstr(strPassword).raw(), machine.asOutParam())" at line 439 of file VBoxManageMisc.cpp

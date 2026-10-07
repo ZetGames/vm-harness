@@ -1,0 +1,5 @@
+Opening OVA source: C:\images\web.ova
+The manifest validates
+Opening VMX target: C:\vms\app\app.vmx
+Error: Target already exists: app.vmx
+Completed with errors

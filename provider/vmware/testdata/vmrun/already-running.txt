@@ -1,0 +1,1 @@
+Error: The virtual machine should not be powered on. It is already running.

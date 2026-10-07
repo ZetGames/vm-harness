@@ -1,0 +1,9 @@
+/vmh
+/vmh.exe
+/dist/
+*.test
+*.out
+*.prof
+coverage.*
+.idea/
+.vscode/

@@ -1,0 +1,1 @@
+VBoxManage.exe: error: Unknown or invalid guest OS type given.

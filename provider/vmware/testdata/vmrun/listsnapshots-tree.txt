@@ -1,0 +1,4 @@
+Total snapshots: 3
+s1
+	s2 with space
+		s3

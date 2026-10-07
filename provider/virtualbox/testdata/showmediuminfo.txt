@@ -1,0 +1,11 @@
+UUID:           3202b838-9244-4f1e-8464-83b409b9bd4b
+Parent UUID:    base
+State:          created
+Type:           normal (base)
+Location:       C:\vms\demo-src\demo-src.vdi
+Storage format: VDI
+Format variant: dynamic default
+Capacity:       64 MBytes
+Size on disk:   2 MBytes
+Encryption:     disabled
+Property:       AllocationBlockSize=1048576

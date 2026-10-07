@@ -1,0 +1,1 @@
+Error: The virtual machine is not powered on: C:\vms\web\web.vmx

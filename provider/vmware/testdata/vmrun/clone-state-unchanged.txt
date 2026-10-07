@@ -1,0 +1,1 @@
+Error: The state of the virtual machine has not changed since the last snapshot operation
