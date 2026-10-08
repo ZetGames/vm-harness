@@ -78,10 +78,11 @@ func TestShow(t *testing.T) {
 		Meta:         map[string]string{vm.LabelKey("team"): "red"},
 		NICs:         []vm.NIC{{Mode: vm.NetNAT, Model: "virtio"}},
 		PortForwards: []vm.PortForward{{Name: "vmh-ssh", Protocol: "tcp", HostIP: "127.0.0.1", HostPort: 2222, GuestPort: 22}},
+		ConsoleLog:   "/vms/web/serial.log",
 	})
 
 	got := decode[vm.Machine](t, e.ok("show", "web").stdout)
-	if got.Name != "web" || got.ID != "virtualbox-1" || !got.Managed || got.Labels["team"] != "red" || len(got.PortForwards) != 1 {
+	if got.Name != "web" || got.ID != "virtualbox-1" || !got.Managed || got.Labels["team"] != "red" || len(got.PortForwards) != 1 || got.ConsoleLog != "/vms/web/serial.log" {
 		t.Fatalf("show = %+v", got)
 	}
 
@@ -94,6 +95,7 @@ func TestShow(t *testing.T) {
 		"labels:    team=red\n",
 		"nic1:      nat virtio\n",
 		"forward:   vmh-ssh tcp 127.0.0.1:2222 -> 22\n",
+		"console:   /vms/web/serial.log\n",
 	} {
 		if !strings.Contains(out, line) {
 			t.Errorf("text show lacks %q:\n%s", line, out)

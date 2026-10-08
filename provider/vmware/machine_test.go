@@ -3,6 +3,7 @@ package vmware
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -171,6 +172,32 @@ func TestGetReadsVMwareWrittenFiles(t *testing.T) {
 	writeFile(t, metaPath(path), `{"managed": 1}`)
 	if _, err := e.Get(context.Background(), "web"); err == nil {
 		t.Error("a corrupt metadata file must be reported")
+	}
+}
+
+func TestConsoleLog(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "web.vmx")
+	abs := filepath.Join(t.TempDir(), "console.txt")
+	port := func(n int, present, fileType, file string) string {
+		return fmt.Sprintf("serial%[1]d.present = \"%[2]s\"\nserial%[1]d.fileType = \"%[3]s\"\nserial%[1]d.fileName = \"%[4]s\"\n", n, present, fileType, file)
+	}
+	cases := []struct {
+		name, vmx, want string
+	}{
+		{"none", simpleVMX("web"), ""},
+		{"relative", port(0, "TRUE", "file", consoleFile), filepath.Join(dir, consoleFile)},
+		{"absolute", port(0, "TRUE", "file", abs), abs},
+		{"not present", port(0, "FALSE", "file", consoleFile), ""},
+		{"disconnected", port(0, "TRUE", "file", consoleFile) + "serial0.startConnected = \"FALSE\"\n", ""},
+		{"no file name", port(0, "TRUE", "file", ""), ""},
+		{"pipe then file", port(0, "TRUE", "pipe", "pipe-name") + port(3, "true", "FILE", "com4.log"), filepath.Join(dir, "com4.log")},
+		{"beyond the last port", port(4, "TRUE", "file", consoleFile), ""},
+	}
+	for _, c := range cases {
+		if got := consoleLog(path, parseVMX([]byte(c.vmx))); got != c.want {
+			t.Errorf("%s: console log = %q, want %q", c.name, got, c.want)
+		}
 	}
 }
 

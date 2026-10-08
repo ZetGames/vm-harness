@@ -25,7 +25,8 @@ func (m *Manager) Start(ctx context.Context, ref Ref, gui bool) (vm.Machine, err
 		case vm.StatePaused:
 			return fmt.Errorf("vm %q is paused, resume it instead: %w", mach.Name, vm.ErrInvalidState)
 		}
-		return p.Start(ctx, mach.ID, gui)
+		_, err := m.power(p, mach, true, func() error { return p.Start(ctx, mach.ID, gui) })
+		return err
 	})
 }
 
@@ -135,6 +136,7 @@ func (m *Manager) transition(ctx context.Context, op string, ref Ref, call func(
 		if !slices.Contains(from, mach.State) {
 			return fmt.Errorf("cannot %s vm %q while it is %s: %w", op, mach.Name, mach.State, vm.ErrInvalidState)
 		}
-		return call(p, ctx, mach.ID)
+		_, err := m.power(p, mach, op == "reset", func() error { return call(p, ctx, mach.ID) })
+		return err
 	})
 }

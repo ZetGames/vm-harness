@@ -1,0 +1,60 @@
+# Sample lease database in the ISC dhcpd format written by vmnetdhcp.
+# Times are UTC.
+
+authoring-byte-order little-endian;
+
+lease 192.168.80.128 {
+	starts 1 2026/10/05 09:00:00;
+	ends 1 2026/10/05 09:30:00;
+	hardware ethernet 00:0c:29:aa:bb:cc;
+	uid 01:00:0c:29:aa:bb:cc;
+	client-hostname "web";
+}
+lease 192.168.80.127 {
+	starts 1 2026/10/05 09:50:00;
+	ends 1 2026/10/05 13:00:00;
+	hardware ethernet 00:0c:29:aa:bb:cc;
+}
+lease 192.168.80.129 {
+	starts 1 2026/10/05 10:00:00;
+	ends 1 2026/10/05 10:30:00;
+	hardware ethernet 00:0C:29:AA:BB:CC;
+	client-hostname "web";
+}
+lease 192.168.80.130 {
+	starts 1 2026/10/05 10:10:00;
+	ends 1 2026/10/05 10:40:00;
+	hardware ethernet 00:0c:29:aa:bb:cc;
+	abandoned;
+}
+lease 192.168.80.131 {
+	starts 1 2026/10/05 10:12:00;
+	ends 1 2026/10/05 10:42:00;
+	binding state free;
+	hardware ethernet 00:0c:29:aa:bb:cc;
+}
+lease 192.168.80.140 {
+	starts 1 2026/10/05 08:00:00;
+	ends never;
+	binding state active;
+	next binding state free;
+	hardware ethernet 00:0c:29:dd:ee:ff;
+	uid "\001\000\014)}\"{;";
+	client-hostname "db } lease 10.0.0.1 { ;";
+	on expiry { set gone = "yes"; }
+}
+lease 192.168.80.150 {
+	starts 1 2026/10/05 07:00:00;
+	ends 1 2026/10/05 07:30:00;
+	hardware ethernet 00:0c:29:11:22:33;
+}
+lease 192.168.80.150 { # handed to another vm after the first lease ended
+	starts 1 2026/10/05 08:00:00;
+	ends 1 2026/10/05 08:30:00;
+	hardware ethernet 00:0c:29:44:55:66;
+}
+lease not-an-ip {
+	starts 1 2026/10/05 11:00:00;
+	ends never;
+	hardware ethernet 00:0c:29:44:55:66;
+}

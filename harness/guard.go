@@ -32,6 +32,11 @@ func acquire(ctx context.Context, sem chan struct{}) (func(), error) {
 	select {
 	case sem <- struct{}{}:
 		return func() { <-sem }, nil
+	default:
+	}
+	select {
+	case sem <- struct{}{}:
+		return func() { <-sem }, nil
 	case <-ctx.Done():
 		return nil, ctx.Err()
 	}
@@ -106,15 +111,9 @@ func (m *Manager) do(ctx context.Context, op string, ref Ref, fn func(vm.Provide
 
 func (m *Manager) locked(ctx context.Context, op string, ref Ref, fn func(vm.Provider, vm.Machine) error) error {
 	return m.do(ctx, op, ref, func(p vm.Provider, mach vm.Machine) error {
-		key := p.Name() + "-" + idHash(mach.ID)
-		release, err := m.locks.acquire(ctx, key)
+		unlock, err := m.lockVM(ctx, p, mach)
 		if err != nil {
-			return fmt.Errorf("wait for other operations on vm %q: %w", mach.Name, err)
-		}
-		defer release()
-		unlock, err := m.fileLock(ctx, key)
-		if err != nil {
-			return fmt.Errorf("wait for other operations on vm %q: %w", mach.Name, err)
+			return err
 		}
 		defer unlock()
 		current, err := m.get(ctx, p, mach.ID)
@@ -123,6 +122,23 @@ func (m *Manager) locked(ctx context.Context, op string, ref Ref, fn func(vm.Pro
 		}
 		return fn(p, current)
 	})
+}
+
+func (m *Manager) lockVM(ctx context.Context, p vm.Provider, mach vm.Machine) (func(), error) {
+	key := p.Name() + "-" + idHash(mach.ID)
+	release, err := m.locks.acquire(ctx, key)
+	if err != nil {
+		return nil, fmt.Errorf("wait for other operations on vm %q: %w", mach.Name, err)
+	}
+	unlock, err := m.fileLock(ctx, key)
+	if err != nil {
+		release()
+		return nil, fmt.Errorf("wait for other operations on vm %q: %w", mach.Name, err)
+	}
+	return func() {
+		unlock()
+		release()
+	}, nil
 }
 
 func (m *Manager) mutate(ctx context.Context, op string, ref Ref, fn func(vm.Provider, vm.Machine) error) error {

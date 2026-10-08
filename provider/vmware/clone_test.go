@@ -102,6 +102,9 @@ func TestFullClone(t *testing.T) {
 	if v.get("sata0:1.fileName") != seedFile || v.get("sata0:2.fileName") != `C:\iso\tools.iso` {
 		t.Fatalf("media paths changed:\n%s", v.encode())
 	}
+	if v.get("msg.autoAnswer") != "TRUE" || v.get("answer.msg.serial.file.open") != "" {
+		t.Fatalf("a clone must answer questions on its own and needs no serial answer without serial files:\n%s", v.encode())
+	}
 	if m.ID != dst || m.Name != "copy" || m.Managed || len(m.Meta) != 0 {
 		t.Fatalf("the clone must start without metadata: %+v", m)
 	}
@@ -146,6 +149,53 @@ func TestCloneReseedsSeedReferencedByAbsolutePath(t *testing.T) {
 		t.Fatalf("clone still points at the source seed:\n%s", v.encode())
 	}
 	checkReseeded(t, seed, filepath.Join(e.root, "copy", seedFile), "copy")
+}
+
+func TestCloneWritesConsoleToOwnFolder(t *testing.T) {
+	e := newTestEnv(t)
+	src := e.addVM(t, "web", simpleVMX("web"))
+	outside := filepath.Join(t.TempDir(), "com2.log")
+	ports := strings.Join([]string{
+		`serial0.present = "TRUE"`,
+		`serial0.fileType = "file"`,
+		`serial0.fileName = "` + filepath.Join(e.root, "web", consoleFile) + `"`,
+		`serial1.present = "TRUE"`,
+		`serial1.fileType = "file"`,
+		`serial1.fileName = "` + outside + `"`,
+		`serial2.present = "TRUE"`,
+		`serial2.fileType = "pipe"`,
+		`serial2.fileName = "pipe-name"`,
+		"",
+	}, "\r\n")
+	writeFile(t, src, simpleVMX("web")+ports)
+	e.fake.OnFunc("-T ws clone", cloneWritesVMX(t))
+	m, err := e.Clone(context.Background(), "web", vm.CloneOptions{Name: "copy"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	dir := filepath.Join(e.root, "copy")
+	if want := filepath.Join(dir, consoleFile); m.ConsoleLog != want {
+		t.Errorf("console log = %q, want %q", m.ConsoleLog, want)
+	}
+	v, err := readVMX(m.ConfigPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	keys := map[string]string{
+		"serial0.fileName":            consoleFile,
+		"serial1.fileName":            "com2.log",
+		"serial2.fileName":            "pipe-name",
+		"answer.msg.serial.file.open": "Replace",
+		"msg.autoAnswer":              "TRUE",
+	}
+	for key, want := range keys {
+		if got := v.get(key); got != want {
+			t.Errorf("%s = %q, want %q", key, got, want)
+		}
+	}
+	if m, err := e.Get(context.Background(), "web"); err != nil || m.ConsoleLog != filepath.Join(e.root, "web", consoleFile) {
+		t.Errorf("source console = %q, %v", m.ConsoleLog, err)
+	}
 }
 
 func TestLinkedClone(t *testing.T) {

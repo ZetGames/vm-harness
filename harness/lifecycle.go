@@ -3,6 +3,7 @@ package harness
 import (
 	"context"
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/fl4metf/vm-harness/vm"
@@ -30,6 +31,7 @@ func (m *Manager) Delete(ctx context.Context, ref Ref, force bool) error {
 		if err := p.Delete(ctx, mach.ID); err != nil {
 			return err
 		}
+		os.Remove(m.bootMarkPath(p, mach.ID))
 		if key := mach.Meta[vm.MetaSSHKey]; key == "" || ownsKey(p.Name(), mach.Name, key) {
 			m.removeKey(key)
 			m.forgetHostKeys(mach)

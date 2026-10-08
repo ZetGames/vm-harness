@@ -183,7 +183,10 @@ func TestHelpDescribesCurrentRules(t *testing.T) {
 		{args: []string{"port", "add"}, want: []string{"must be a loopback address or an address of this host"}},
 		{args: []string{"serve"}, want: []string{"self-contained", "plain ISO 9660 images", "appliances .ova files", "Inside <root> only <root>/files is writable"}},
 		{args: []string{"mcp"}, want: []string{"exits with status 0 when the client closes stdin"}},
-		{args: []string{"wait"}, want: []string{"A rejected guest login is retried"}},
+		{args: []string{"wait"}, want: []string{"A rejected guest login is retried", "vmh hard-resets the VM and keeps waiting", "fails the wait at once with not_ready", "VMs that vmh does not manage are never reset; adopted VMs are managed", "paused or busy", "In text mode each reset is printed on stderr; JSON results list them", "another wait would reset the VM again", "start by vmh that succeeded"}},
+		{args: []string{"providers"}, want: []string{"info.max_reliable_cpus is the most vCPUs", "Hyper-V"}},
+		{args: []string{"create"}, want: []string{"capped at the provider's max_reliable_cpus", "an --appliance gets that many CPUs instead of its own", "virtio unless a -f spec sets its model"}},
+		{args: []string{"ip"}, want: []string{"the address VMware's DHCP server leased", "since the VM was powered on, if that lease has not ended", "a reset or a reboot inside the guest is not a new power-on", "--wait resets a stuck boot"}},
 	}
 	for _, c := range cases {
 		help := strings.Join(strings.Fields(e.ok(append(c.args, "--help")...).stdout), " ")

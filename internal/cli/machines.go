@@ -15,8 +15,13 @@ import (
 
 func (a *app) providersCommand() *cobra.Command {
 	return &cobra.Command{
-		Use:     "providers",
-		Short:   "List hypervisors, their versions, features and availability",
+		Use:   "providers",
+		Short: "List hypervisors, their versions, features and availability",
+		Long: `List hypervisors, their versions, features and availability, then warnings
+about the host setup, such as VirtualBox running on top of Hyper-V. In JSON,
+info.max_reliable_cpus is the most vCPUs a VM of that provider boots reliably
+with on this host (1 for VirtualBox on Hyper-V); "vmh create" without --cpus
+uses no more than that.`,
 		GroupID: groupMachines,
 		Args:    cobra.NoArgs,
 		RunE: a.withManager(func(ctx context.Context, m *harness.Manager, _ []string) error {

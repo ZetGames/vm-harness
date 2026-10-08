@@ -7,11 +7,13 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"runtime"
 	"strings"
 	"testing"
 	"time"
 
 	"github.com/fl4metf/vm-harness/internal/fakerun"
+	"github.com/fl4metf/vm-harness/internal/hostinfo"
 	"github.com/fl4metf/vm-harness/runner"
 	"github.com/fl4metf/vm-harness/vm"
 )
@@ -250,6 +252,16 @@ func TestRetryOnTransientLock(t *testing.T) {
 	}
 }
 
+func TestRetryWhileLockRequestPending(t *testing.T) {
+	f := newFake(t).OnResult("setextradata", failure(t, "err-lock-pending.txt"), runner.Result{})
+	if err := newProvider(t, f).SetMeta(context.Background(), demoID, map[string]string{"managed": demoID}); err != nil {
+		t.Fatal(err)
+	}
+	if got := len(f.Find("setextradata")); got != 2 {
+		t.Fatalf("attempts = %d", got)
+	}
+}
+
 func TestRetryIsBounded(t *testing.T) {
 	f := newFake(t).OnResult("modifyvm", failure(t, "err-locked.txt"))
 	_, err := newProvider(t, f).run(context.Background(), "modifyvm", demoID, "--memory", "256")
@@ -349,13 +361,68 @@ func TestInfo(t *testing.T) {
 func TestInfoRejectsOldVirtualBox(t *testing.T) {
 	for _, version := range []string{"6.1.50_Ubuntur161033\n", "garbage\n"} {
 		f := newFake(t).On("--version", version)
-		info, err := newProvider(t, f).Info(context.Background())
+		p := newProvider(t, f)
+		p.platform = hostinfo.HyperVRoot
+		info, err := p.Info(context.Background())
 		if vm.Code(err) != vm.CodeUnavailable || !strings.Contains(err.Error(), "7.0 or newer") {
 			t.Fatalf("%q: err = %v", version, err)
 		}
-		if info.Version != strings.TrimSpace(version) {
+		if info.Version != strings.TrimSpace(version) || info.Warnings != nil || info.MaxReliableCPUs != 0 {
 			t.Fatalf("%q: info = %+v", version, info)
 		}
+	}
+}
+
+func TestInfoWarnsAboutTheHostPlatform(t *testing.T) {
+	cases := []struct {
+		platform hostinfo.Platform
+		warnings []string
+		reliable int
+	}{
+		{hostinfo.BareMetal, nil, 0},
+		{hostinfo.HyperVRoot, []string{hyperVWarning}, 1},
+		{hostinfo.Guest, []string{nestedWarning}, 0},
+	}
+	for _, c := range cases {
+		p := newProvider(t, newFake(t).On("--version", fixture(t, "version.txt")))
+		p.platform = c.platform
+		info, err := p.Info(context.Background())
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !reflect.DeepEqual(info.Warnings, c.warnings) || info.MaxReliableCPUs != c.reliable {
+			t.Errorf("platform %d: warnings = %q, max reliable cpus = %d", c.platform, info.Warnings, info.MaxReliableCPUs)
+		}
+	}
+	if !strings.HasPrefix(hyperVWarning, "VirtualBox runs on top of Hyper-V") || strings.Contains(nestedWarning, "Hyper-V") {
+		t.Errorf("warnings name the wrong hypervisor: %q, %q", hyperVWarning, nestedWarning)
+	}
+	for _, phrase := range []string{"new and imported VirtualBox VMs 1 vCPU", "clones keep the source's count", "non-Windows VMs it manages that have a serial console log"} {
+		if !strings.Contains(hyperVWarning, phrase) {
+			t.Errorf("the Hyper-V warning does not say %q", phrase)
+		}
+	}
+}
+
+func TestHostPlatform(t *testing.T) {
+	want := hostinfo.Detect()
+	if want == hostinfo.HyperVRoot && runtime.GOOS != "windows" {
+		want = hostinfo.Guest
+	}
+	if got := New(Options{}).platform; got != want {
+		t.Fatalf("platform = %d, want %d", got, want)
+	}
+}
+
+func TestGetConsoleLog(t *testing.T) {
+	dir := t.TempDir()
+	f := newFake(t).On("showvminfo", seededInfo(demoID, "web", dir, "running")).On("getextradata", "")
+	m, err := newProvider(t, f).Get(context.Background(), "web")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if want := filepath.Join(dir, "serial.log"); m.ConsoleLog != want {
+		t.Fatalf("console log = %q, want %q", m.ConsoleLog, want)
 	}
 }
 

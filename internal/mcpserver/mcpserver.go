@@ -33,8 +33,11 @@ func New(m *harness.Manager, version string) *mcp.Server {
 
 	addTool(s, &mcp.Tool{
 		Name: "vm_providers",
-		Description: "List the hypervisors vmh supports, whether each is available on this host, its version and its features " +
-			"(port_forward, linked_clone, cloud_init, ...). Call it first to pick a provider.",
+		Description: "List the hypervisors vmh supports, whether each is available on this host, its version, its features " +
+			"(port_forward, linked_clone, cloud_init, ...) and warnings about the host setup, such as VirtualBox running " +
+			"on top of Hyper-V, where guests boot slowly and can hang. max_reliable_cpus, when set, is the most vCPUs a VM " +
+			"of that provider boots reliably with on this host (1 for VirtualBox on Hyper-V); vm_create without cpus caps " +
+			"its default at it and gives an appliance that many. Call it first to pick a provider.",
 		Annotations: readOnly(),
 	}, h.providers)
 
@@ -50,7 +53,7 @@ func New(m *harness.Manager, version string) *mcp.Server {
 		Description: "Show one VM: state, CPUs, memory, NICs, port forwards, labels, current snapshot, whether " +
 			"vmh manages it and, for VMs created with cloud_init, ssh with the user, the private key_path and, " +
 			"when a port forward to guest port 22 exists, the host and port to connect to (otherwise use vm_ip " +
-			"and port 22).",
+			"and port 22). console_log is the host file that receives the guest serial console, when the VM has one.",
 		Annotations: readOnly(),
 	}, h.get)
 
@@ -146,7 +149,9 @@ func New(m *harness.Manager, version string) *mcp.Server {
 
 	addTool(s, &mcp.Tool{
 		Name: "vm_ip",
-		Description: "Return the guest IPv4 address reported by the guest tools. Fails with not_ready while the " +
+		Description: "Return the guest IPv4 address reported by the guest tools; on VMware, when the tools do not " +
+			"answer, the address VMware's DHCP server leased to the VM since its current power-on, if that lease has " +
+			"not ended (a reset or a reboot inside the guest is not a new power-on). Fails with not_ready while the " +
 			"guest is still booting; use vm_wait with for ip to block until it is known.",
 		Annotations: readOnly(),
 	}, h.ip)
@@ -158,8 +163,14 @@ func New(m *harness.Manager, version string) *mcp.Server {
 			"timeout error naming the last failed check, and at once on errors that waiting cannot fix, such as a " +
 			"missing VM or no user given; a rejected guest login is retried, because cloud_init may still be " +
 			"creating the user. Booting a new VM can take minutes; if your client gives up on long calls, pass a " +
-			"shorter timeout_sec and call again. Returns the VM, the ip for ip, and the time waited.",
-		Annotations: readOnly(),
+			"shorter timeout_sec and call again. Waiting for ip, ssh or guest may hard-reset a stuck VM that vmh " +
+			"manages and that has a console_log: when the current boot shows a kernel panic or a network card " +
+			"without a valid MAC address, or prints nothing for 90 seconds before a login prompt, vmh resets the VM, " +
+			"at most twice per call, and lists each reset in recoveries (errors name them too). Paused or busy VMs " +
+			"and Windows guests are never reset. When the boot is stuck again after two resets, the call fails at " +
+			"once with not_ready; another call would reset the VM again, so fix the cause the error names first. " +
+			"Returns the VM, the ip for ip, the time waited and the recoveries.",
+		Annotations: &mcp.ToolAnnotations{DestructiveHint: hint(true), OpenWorldHint: hint(false)},
 	}, h.wait)
 
 	addContentTool(s, &mcp.Tool{

@@ -256,6 +256,7 @@ func machineAt(path string, running runningSet) (vm.Machine, error) {
 		Meta:            meta,
 		NICs:            nics(v),
 		CurrentSnapshot: currentSnapshot(path),
+		ConsoleLog:      consoleLog(path, v),
 	}
 	vm.ApplyMeta(&m)
 	return m, nil
@@ -349,6 +350,31 @@ func nics(v *vmxFile) []vm.NIC {
 		nics = append(nics, nic)
 	}
 	return nics
+}
+
+func serialFiles(v *vmxFile) []string {
+	var ports []string
+	for i := range maxSerialPorts {
+		prefix := fmt.Sprintf("serial%d.", i)
+		if strings.EqualFold(v.get(prefix+"fileType"), "file") && v.get(prefix+"fileName") != "" {
+			ports = append(ports, prefix)
+		}
+	}
+	return ports
+}
+
+func consoleLog(path string, v *vmxFile) string {
+	for _, port := range serialFiles(v) {
+		if !isTrue(v.get(port+"present")) || strings.EqualFold(v.get(port+"startConnected"), "FALSE") {
+			continue
+		}
+		file := v.get(port + "fileName")
+		if !filepath.IsAbs(file) {
+			file = filepath.Join(filepath.Dir(path), file)
+		}
+		return filepath.Clean(file)
+	}
+	return ""
 }
 
 func atoi(s string, fallback int) int {

@@ -42,14 +42,16 @@ func (m *Manager) Wait(ctx context.Context, ref Ref, req WaitRequest) (WaitResul
 	}
 	waitCtx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
+	var recoveries []string
 	expired := func(last error) error {
+		what := goal + resetNote(recoveries)
 		if err := ctx.Err(); err != nil {
-			return fmt.Errorf("wait for vm %q to %s: %w", ref.VM, goal, err)
+			return fmt.Errorf("wait for vm %q to %s: %w", ref.VM, what, err)
 		}
 		if last == nil {
-			return fmt.Errorf("timed out after %s waiting for vm %q to %s: %w", timeout, ref.VM, goal, context.DeadlineExceeded)
+			return fmt.Errorf("timed out after %s waiting for vm %q to %s: %w", timeout, ref.VM, what, context.DeadlineExceeded)
 		}
-		return fmt.Errorf("timed out after %s waiting for vm %q to %s, last check: %v: %w", timeout, ref.VM, goal, last, context.DeadlineExceeded)
+		return fmt.Errorf("timed out after %s waiting for vm %q to %s, last check: %v: %w", timeout, ref.VM, what, last, context.DeadlineExceeded)
 	}
 
 	p, mach, err := m.resolve(waitCtx, ref)
@@ -63,21 +65,35 @@ func (m *Manager) Wait(ctx context.Context, ref Ref, req WaitRequest) (WaitResul
 	if err != nil {
 		return WaitResult{}, err
 	}
+	boot := m.watchBoot(p, mach, req.For)
 	var last error
 	for {
 		res, err := check(waitCtx)
 		if err == nil {
 			res.ElapsedMS = time.Since(start).Milliseconds()
+			res.Recoveries = recoveries
 			return res, nil
 		}
 		if stopWaiting(err) {
-			return WaitResult{}, err
+			if len(recoveries) > 0 {
+				err = fmt.Errorf("wait for vm %q to %s%s: %w", ref.VM, goal, resetNote(recoveries), err)
+			}
+			return WaitResult{Recoveries: recoveries}, err
 		}
 		if waitCtx.Err() == nil {
 			last = err
 		}
+		if boot != nil && waitCtx.Err() == nil {
+			note, err := m.recoverBoot(waitCtx, p, mach, boot, recoveries)
+			if err != nil {
+				return WaitResult{Recoveries: recoveries}, err
+			}
+			if note != "" {
+				recoveries = append(recoveries, note)
+			}
+		}
 		if sleep(waitCtx, m.poll) != nil {
-			return WaitResult{}, expired(last)
+			return WaitResult{Recoveries: recoveries}, expired(last)
 		}
 	}
 }

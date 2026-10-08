@@ -132,7 +132,7 @@ func TestCreate(t *testing.T) {
 			return []string{
 				"list vms",
 				"createvm --name web --uuid ID --ostype Ubuntu_64 --register --basefolder " + root,
-				"modifyvm ID --cpus 2 --memory 1024 --vram 16 --graphicscontroller vmsvga --firmware bios --audio-enabled off --boot1 dvd --boot2 disk --boot3 none --boot4 none --rtc-use-utc on --nic1 nat --paravirt-provider hyperv",
+				"modifyvm ID --cpus 2 --memory 1024 --vram 16 --graphicscontroller vmsvga --firmware bios --audio-enabled off --boot1 dvd --boot2 disk --boot3 none --boot4 none --rtc-use-utc on --nic1 nat",
 				"storagectl ID --name SATA --add sata --controller IntelAhci --portcount 4 --bootable on",
 				"createmedium disk --filename " + disk + " --size 10240 --format VDI",
 				"storageattach ID --storagectl SATA --port 0 --device 0 --type hdd --medium " + disk,
@@ -152,7 +152,7 @@ func TestCreate(t *testing.T) {
 				"list vms",
 				"list dvds",
 				"createvm --name web --uuid ID --ostype Ubuntu_64 --register --basefolder " + root,
-				"modifyvm ID --cpus 2 --memory 1024 --vram 16 --graphicscontroller vmsvga --firmware bios --audio-enabled off --boot1 dvd --boot2 disk --boot3 none --boot4 none --rtc-use-utc on --nic1 nat --paravirt-provider hyperv",
+				"modifyvm ID --cpus 2 --memory 1024 --vram 16 --graphicscontroller vmsvga --firmware bios --audio-enabled off --boot1 dvd --boot2 disk --boot3 none --boot4 none --rtc-use-utc on --nic1 nat",
 				"storagectl ID --name SATA --add sata --controller IntelAhci --portcount 4 --bootable on",
 				"createmedium disk --filename " + disk + " --size 10240 --format VDI",
 				"storageattach ID --storagectl SATA --port 0 --device 0 --type hdd --medium " + disk,
@@ -175,7 +175,7 @@ func TestCreate(t *testing.T) {
 			return []string{
 				"list vms",
 				"createvm --name web --uuid ID --ostype Windows11_64 --register --basefolder " + root,
-				"modifyvm ID --cpus 2 --memory 1024 --vram 128 --graphicscontroller vboxsvga --firmware efi --audio-enabled off --boot1 dvd --boot2 disk --boot3 none --boot4 none --tpm-type 2.0 --paravirt-provider hyperv" +
+				"modifyvm ID --cpus 2 --memory 1024 --vram 128 --graphicscontroller vboxsvga --firmware efi --audio-enabled off --boot1 dvd --boot2 disk --boot3 none --boot4 none --tpm-type 2.0" +
 					" --nic1 bridged --bridge-adapter1 Intel(R) Ethernet --nic-type1 82545EM --mac-address1 080027aabbcc --nic2 intnet --intnet2 intnet",
 				"storagectl ID --name SATA --add sata --controller IntelAhci --portcount 4 --bootable on",
 				"createmedium disk --filename " + disk + " --size 10240 --format VDI",
@@ -192,7 +192,7 @@ func TestCreate(t *testing.T) {
 			return []string{
 				"list vms",
 				"createvm --name web --uuid ID --ostype Ubuntu_64 --register --basefolder " + root,
-				"modifyvm ID --cpus 2 --memory 1024 --vram 16 --graphicscontroller vmsvga --firmware bios --audio-enabled off --boot1 dvd --boot2 disk --boot3 none --boot4 none --rtc-use-utc on --nic1 nat --paravirt-provider hyperv",
+				"modifyvm ID --cpus 2 --memory 1024 --vram 16 --graphicscontroller vmsvga --firmware bios --audio-enabled off --boot1 dvd --boot2 disk --boot3 none --boot4 none --rtc-use-utc on --nic1 nat",
 				"storagectl ID --name SATA --add sata --controller IntelAhci --portcount 4 --bootable on",
 				"list hdds",
 				`clonemedium disk C:\images\noble.vmdk ` + disk + " --format VDI",
@@ -213,7 +213,7 @@ func TestCreate(t *testing.T) {
 			return []string{
 				"list vms",
 				"createvm --name web --uuid ID --ostype Ubuntu_64 --register --basefolder " + root,
-				"modifyvm ID --cpus 2 --memory 1024 --vram 16 --graphicscontroller vmsvga --firmware bios --audio-enabled off --boot1 dvd --boot2 disk --boot3 none --boot4 none --rtc-use-utc on --nic1 nat --paravirt-provider hyperv",
+				"modifyvm ID --cpus 2 --memory 1024 --vram 16 --graphicscontroller vmsvga --firmware bios --audio-enabled off --boot1 dvd --boot2 disk --boot3 none --boot4 none --rtc-use-utc on --nic1 nat",
 				"storagectl ID --name SATA --add sata --controller IntelAhci --portcount 4 --bootable on",
 				"list hdds",
 				`clonemedium disk C:\vms\demo-1\demo-1-disk0.vdi ` + disk + " --format VDI",
@@ -258,7 +258,10 @@ func TestCreateCloudInit(t *testing.T) {
 	}
 	id := createdID(t, f)
 	modify := f.Find("modifyvm " + id + " --cpus")
-	if len(modify) != 1 || !strings.HasSuffix(modify[0].String(), " --nic1 nat --paravirt-provider hyperv --uart1 0x3F8 4 --uartmode1 file "+filepath.Join(dir, "serial.log")) {
+	want := "modifyvm " + id + " --cpus 1 --memory 512 --vram 16 --graphicscontroller vmsvga --firmware bios --audio-enabled off" +
+		" --boot1 dvd --boot2 disk --boot3 none --boot4 none --rtc-use-utc on --nic1 nat --nic-type1 virtio" +
+		" --uart1 0x3F8 4 --uartmode1 file " + filepath.Join(dir, "serial.log")
+	if len(modify) != 1 || modify[0].String() != want {
 		t.Fatalf("modifyvm = %v", modify)
 	}
 	if !f.Called("storageattach " + id + " --storagectl SATA --port 2 --device 0 --type dvddrive --medium " + seed) {
@@ -266,6 +269,35 @@ func TestCreateCloudInit(t *testing.T) {
 	}
 	if _, err := os.Stat(seed); err != nil {
 		t.Fatalf("seed: %v", err)
+	}
+}
+
+func TestCloudInitNICModel(t *testing.T) {
+	ci := &vm.CloudInit{User: "vmh"}
+	cases := []struct {
+		name string
+		spec vm.Spec
+		want string
+	}{
+		{"default nic", vm.Spec{OSType: "Ubuntu_64", CloudInit: ci}, " --nic1 nat --nic-type1 virtio"},
+		{"nat nic without model", vm.Spec{OSType: "Ubuntu_64", CloudInit: ci, NICs: []vm.NIC{{Mode: vm.NetNAT}}}, " --nic1 nat --nic-type1 virtio"},
+		{"only nic 1", vm.Spec{CloudInit: ci, NICs: []vm.NIC{{}, {Mode: vm.NetInternal}}}, " --nic1 nat --nic2 intnet --intnet2 intnet --nic-type1 virtio"},
+		{"explicit model", vm.Spec{OSType: "Ubuntu_64", CloudInit: ci, NICs: []vm.NIC{{Mode: vm.NetNAT, Model: "82540EM"}}}, " --nic1 nat --nic-type1 82540EM"},
+		{"nic 1 off", vm.Spec{OSType: "Ubuntu_64", CloudInit: ci, NICs: []vm.NIC{{Mode: vm.NetNone}}}, " --nic1 none"},
+		{"windows", vm.Spec{OSType: "Windows11_64", CloudInit: ci}, " --nic1 nat"},
+		{"without cloud-init", vm.Spec{OSType: "Ubuntu_64"}, " --nic1 nat"},
+		{"unattended", vm.Spec{OSType: "Ubuntu_64", ISO: "ubuntu.iso", Unattended: &vm.Unattended{User: "vmh"}}, " --nic1 nat"},
+	}
+	for _, c := range cases {
+		nics, err := nicArgs(c.spec.NICs)
+		if err != nil {
+			t.Fatal(err)
+		}
+		args := strings.Join(hardwareArgs("ID", "dir", c.spec, "", nics), " ")
+		args = strings.Split(args, " --uart1 ")[0]
+		if got := args[strings.Index(args, " --nic1 "):]; got != c.want {
+			t.Errorf("%s: nic args %q, want %q", c.name, got, c.want)
+		}
 	}
 }
 
@@ -363,7 +395,6 @@ func TestCreateAppliance(t *testing.T) {
 		"setextradata " + importedID + " vmh/ssh_key",
 		"showvminfo " + importedID + " --machinereadable",
 		"getextradata " + importedID + " enumerate",
-		"modifyvm " + importedID + " --paravirt-provider hyperv",
 		"showvminfo " + importedID + " --machinereadable",
 		"modifyvm " + importedID + " --natpf1 ssh,tcp,127.0.0.1,2223,,22",
 		"setextradata " + importedID + " vmh/os_type ubuntu",
@@ -495,25 +526,40 @@ func TestCreateApplianceRefuses(t *testing.T) {
 }
 
 func TestCreateApplianceCloudInit(t *testing.T) {
-	root := t.TempDir()
-	f := applianceFake(t, root).On("getextradata "+importedID+" enumerate", "")
-	p := newProvider(t, f)
-	p.root = root
-	dir := filepath.Join(root, "app")
-	spec := vm.Spec{Name: "app", Appliance: `C:\ova\app.ova`, Firmware: "EFI", CloudInit: &vm.CloudInit{User: "vmh", Password: "pw"}}
-	if _, err := p.Create(context.Background(), spec); err != nil {
-		t.Fatal(err)
+	cases := []struct {
+		name     string
+		ostype   string
+		nics     []vm.NIC
+		hardware string
+	}{
+		{"appliance nics kept", "Ubuntu (64-bit)", nil, " --firmware efi"},
+		{"nat nic becomes virtio", "Ubuntu (64-bit)", []vm.NIC{{Mode: vm.NetNAT}}, " --firmware efi --nic1 nat --nic-type1 virtio"},
+		{"windows appliance keeps its nic model", "Windows 10 (64-bit)", []vm.NIC{{Mode: vm.NetNAT}}, " --firmware efi --nic1 nat"},
 	}
-	want := []string{
-		"modifyvm " + importedID + " --firmware efi --paravirt-provider hyperv --uart1 0x3F8 4 --uartmode1 file " + filepath.Join(dir, "serial.log"),
-		"showvminfo " + importedID + " --machinereadable",
-		"storageattach " + importedID + " --storagectl SATA --port 3 --device 0 --type dvddrive --medium " + filepath.Join(dir, "seed.iso"),
-		"showvminfo " + importedID + " --machinereadable",
-		"getextradata " + importedID + " enumerate",
-	}
-	got := commands(f)
-	if i := slices.Index(got, want[0]); i < 0 || !reflect.DeepEqual(got[i:], want) {
-		t.Fatalf("calls:\n%s", strings.Join(got, "\n"))
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			root := t.TempDir()
+			info := setField(fixture(t, "showvminfo-imported.txt"), "ostype", c.ostype)
+			f := importFake(t, root, info, staleExtradata).On("getextradata "+importedID+" enumerate", "")
+			p := newProvider(t, f)
+			p.root = root
+			dir := filepath.Join(root, "app")
+			spec := vm.Spec{Name: "app", Appliance: `C:\ova\app.ova`, Firmware: "EFI", NICs: c.nics, CloudInit: &vm.CloudInit{User: "vmh", Password: "pw"}}
+			if _, err := p.Create(context.Background(), spec); err != nil {
+				t.Fatal(err)
+			}
+			want := []string{
+				"showvminfo " + importedID + " --machinereadable",
+				"modifyvm " + importedID + c.hardware + " --uart1 0x3F8 4 --uartmode1 file " + filepath.Join(dir, "serial.log"),
+				"storageattach " + importedID + " --storagectl SATA --port 3 --device 0 --type dvddrive --medium " + filepath.Join(dir, "seed.iso"),
+				"showvminfo " + importedID + " --machinereadable",
+				"getextradata " + importedID + " enumerate",
+			}
+			got := commands(f)
+			if len(got) < len(want) || !reflect.DeepEqual(got[len(got)-len(want):], want) {
+				t.Fatalf("calls:\n%s", strings.Join(got, "\n"))
+			}
+		})
 	}
 }
 

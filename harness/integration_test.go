@@ -10,6 +10,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"slices"
 	"strconv"
 	"strings"
 	"testing"
@@ -22,7 +23,16 @@ import (
 
 type ownedVMs struct {
 	*virtualbox.Provider
-	names []string
+	names   []string
+	onReset func()
+}
+
+func (o *ownedVMs) Reset(ctx context.Context, ref string) error {
+	err := o.Provider.Reset(ctx, ref)
+	if err == nil && o.onReset != nil {
+		o.onReset()
+	}
+	return err
 }
 
 func (o *ownedVMs) List(ctx context.Context) ([]vm.Machine, error) {
@@ -170,6 +180,7 @@ func TestIntegrationVirtualBox(t *testing.T) {
 	if !strings.Contains(err.Error(), "not ready") {
 		t.Fatalf("wait ip error = %v", err)
 	}
+	waitRecoversBoot(t, m, p, ref, created)
 	if png, err := m.Screenshot(ctx, ref, vm.Credentials{}); err != nil || len(png) < 8 {
 		t.Fatalf("screenshot: %d bytes, %v", len(png), err)
 	}
@@ -280,5 +291,34 @@ func TestIntegrationVirtualBox(t *testing.T) {
 	wantErr(t, err, vm.ErrNotFound)
 	if exists(key) || exists(key+".pub") {
 		t.Fatal("key left behind")
+	}
+}
+
+func waitRecoversBoot(t *testing.T, m *Manager, p *ownedVMs, ref Ref, created vm.Machine) {
+	t.Helper()
+	console := created.ConsoleLog
+	if filepath.Base(console) != "serial.log" || filepath.Dir(console) != filepath.Dir(created.ConfigPath) {
+		t.Fatalf("console log = %q, config = %q", console, created.ConfigPath)
+	}
+	m.bootStall = 2 * time.Second
+	p.onReset = func() { time.AfterFunc(2*time.Second, func() { appendConsole(t, console, stalledBoot) }) }
+	defer func() {
+		m.bootStall = bootStallWindow
+		p.onReset = nil
+	}()
+	time.AfterFunc(time.Second, func() { appendConsole(t, console, stalledBoot+ioapicPanic) })
+	start := time.Now()
+	res, err := m.Wait(context.Background(), ref, WaitRequest{For: WaitIP, Timeout: time.Minute})
+	wantErr(t, err, vm.ErrNotReady)
+	stall := "boot stalled for 2s at: Begin: Loading essential drivers ... — reset"
+	if !slices.Equal(res.Recoveries, []string{panicRecovery, stall}) {
+		t.Fatalf("recoveries = %q", res.Recoveries)
+	}
+	want := "is stuck again after 2 automatic resets (" + panicRecovery + "; " + stall + "): boot stalled for 2s at: Begin: Loading essential drivers ...; this wait gives up, and another wait would reset the vm again"
+	if !strings.Contains(err.Error(), want) || time.Since(start) > 30*time.Second {
+		t.Fatalf("wait error after %s = %v", time.Since(start), err)
+	}
+	if mach, err := m.Get(context.Background(), ref); err != nil || mach.State != vm.StateRunning {
+		t.Fatalf("after the resets: %s, %v", mach.State, err)
 	}
 }

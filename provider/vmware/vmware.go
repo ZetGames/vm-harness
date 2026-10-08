@@ -32,6 +32,7 @@ type Provider struct {
 	hostType     string
 	root         string
 	inventory    string
+	leases       []string
 	runner       runner.Runner
 }
 
@@ -47,6 +48,7 @@ func New(opts Options) *Provider {
 		hostType:     opts.HostType,
 		root:         opts.Root,
 		inventory:    inventoryPath(),
+		leases:       leaseFiles(runtime.GOOS),
 		runner:       opts.Runner,
 	}
 	if p.vmrun == "" || p.vdiskmanager == "" || p.ovftool == "" {

@@ -44,7 +44,12 @@ Installer ISOs (VirtualBox): --unattended with --user and --password installs
 the OS without interaction.
 
 Defaults, configurable in config.json: 2 CPUs, 2048 MB memory, 20 GB disk,
-os linux, one NAT NIC.
+os linux, one NAT NIC; an --appliance keeps its own CPUs, memory, disk and os.
+Without --cpus the default is capped at the provider's max_reliable_cpus
+("vmh providers"), and an --appliance gets that many CPUs instead of its own:
+VirtualBox on a Hyper-V host boots reliably only with 1 vCPU, so it gets 1.
+On VirtualBox the first NIC of a Linux --cloud-init VM is virtio unless a -f
+spec sets its model.
 
 -f reads a JSON spec; flags override its fields and relative paths in it are
 relative to the file. Spec fields: name, provider, os_type, cpus, memory_mb,

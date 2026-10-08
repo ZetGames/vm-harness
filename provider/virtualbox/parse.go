@@ -75,6 +75,19 @@ func (i vmInfo) dir() string  { return filepath.Dir(i.fields["CfgFile"]) }
 
 func (i vmInfo) state() vm.State { return stateOf(i.fields["VMState"]) }
 
+func (i vmInfo) consoleLog() string {
+	for n := 1; n <= maxUARTs; n++ {
+		if i.fields["uart"+strconv.Itoa(n)] == "off" {
+			continue
+		}
+		path, ok := strings.CutPrefix(i.fields["uartmode"+strconv.Itoa(n)], "file,")
+		if ok && filepath.IsAbs(path) {
+			return path
+		}
+	}
+	return ""
+}
+
 func (i vmInfo) numbered(prefix string) []string {
 	var values []string
 	for n := 1; ; n++ {

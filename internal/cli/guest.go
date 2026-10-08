@@ -226,7 +226,8 @@ of them or <root>/files.`,
 }
 
 type ipResult struct {
-	IP string `json:"ip"`
+	IP         string   `json:"ip"`
+	Recoveries []string `json:"recoveries,omitempty"`
 }
 
 func (a *app) ipCommand() *cobra.Command {
@@ -234,28 +235,43 @@ func (a *app) ipCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "ip <vm>",
 		Short: "Print the IP address the guest reports",
-		Long: `Print the IP address the guest reports through the guest tools. Without
---wait this fails with not_ready (exit 10) while no address is known.`,
+		Long: `Print the IP address the guest reports through the guest tools; on VMware,
+when the tools do not answer, the address VMware's DHCP server leased to the
+VM's MAC since the VM was powered on, if that lease has not ended; a reset or a
+reboot inside the guest is not a new power-on. Without --wait this fails with
+not_ready (exit 10) while no address is known. --wait resets a stuck boot like
+"vmh wait --for ip".`,
 		GroupID: groupGuest,
 		Args:    cobra.ExactArgs(1),
 		RunE: a.withManager(func(ctx context.Context, m *harness.Manager, args []string) error {
-			ip, err := guestIP(ctx, m, a.ref(args[0]), wait)
+			res, err := guestIP(ctx, m, a.ref(args[0]), wait)
+			a.noteRecoveries(res.Recoveries)
 			if err != nil {
 				return err
 			}
-			return a.emit(ipResult{IP: ip}, func(w io.Writer) { fmt.Fprintln(w, ip) })
+			return a.emit(res, func(w io.Writer) { fmt.Fprintln(w, res.IP) })
 		}),
 	}
 	cmd.Flags().Var(durationValue{&wait}, "wait", "wait up to this long for an address")
 	return cmd
 }
 
-func guestIP(ctx context.Context, m *harness.Manager, ref harness.Ref, wait time.Duration) (string, error) {
+func guestIP(ctx context.Context, m *harness.Manager, ref harness.Ref, wait time.Duration) (ipResult, error) {
 	if wait <= 0 {
-		return m.GuestIP(ctx, ref)
+		ip, err := m.GuestIP(ctx, ref)
+		return ipResult{IP: ip}, err
 	}
 	res, err := m.Wait(ctx, ref, harness.WaitRequest{For: harness.WaitIP, Timeout: wait})
-	return res.IP, err
+	return ipResult{IP: res.IP, Recoveries: res.Recoveries}, err
+}
+
+func (a *app) noteRecoveries(recoveries []string) {
+	if a.format == formatJSON {
+		return
+	}
+	for _, r := range recoveries {
+		fmt.Fprintf(a.stderr, "vmh: %s\n", r)
+	}
 }
 
 func (a *app) waitCommand() *cobra.Command {
@@ -272,13 +288,29 @@ func (a *app) waitCommand() *cobra.Command {
   ssh                               an SSH login works (vmh's key, or --ssh-*)
   guest                             the guest tools run commands (-u, --password)
 Fails with timeout (exit 7) when --timeout passes first. A rejected guest login
-is retried until then, because cloud-init may still be creating the user.`,
+is retried until then, because cloud-init may still be creating the user.
+
+While waiting for ip, ssh or guest, vmh reads the serial console log of a VM
+it manages, if the VM has one (VMs created with --cloud-init write serial.log
+in their folder: "console" in "vmh show", console_log in JSON). Only the
+current boot counts: the output after the last "Linux version" line and after
+the last reset or start by vmh that succeeded. vmh hard-resets the VM and keeps
+waiting when that boot shows a kernel panic or "Invalid MAC Address" (a network
+card that came up broken), or when the log has not been written for 90s while
+the boot has reached neither a login prompt nor the cloud-init "finished" line.
+Time the VM spends paused or busy with another vmh operation does not count. In
+text mode each reset is printed on stderr; JSON results list them in
+"recoveries", and an error message names them. After two resets a boot that is
+stuck again fails the wait at once with not_ready (exit 10); another wait would
+reset the VM again, so fix the cause first. Windows guests and VMs that vmh does
+not manage are never reset; adopted VMs are managed.`,
 		Example: "  vmh wait web --for ssh --timeout 10m",
 		GroupID: groupGuest,
 		Args:    cobra.ExactArgs(1),
 		RunE: a.withManager(func(ctx context.Context, m *harness.Manager, args []string) error {
 			req.Access = g.access()
 			res, err := m.Wait(ctx, a.ref(args[0]), req)
+			a.noteRecoveries(res.Recoveries)
 			if err != nil {
 				return err
 			}

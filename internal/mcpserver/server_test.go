@@ -174,7 +174,7 @@ func TestListTools(t *testing.T) {
 		"vm_write_file": {required: []string{"vm", "guest_path", "content"}, destructive: true, idempotent: true},
 		"vm_read_file":  {required: []string{"vm", "guest_path"}, readOnly: true, idempotent: true, structured: true},
 		"vm_ip":         {required: []string{"vm"}, readOnly: true, idempotent: true, structured: true},
-		"vm_wait":       {required: []string{"vm", "for"}, readOnly: true, idempotent: true, structured: true},
+		"vm_wait":       {required: []string{"vm", "for"}, destructive: true, structured: true},
 		"vm_screenshot": {required: []string{"vm"}, readOnly: true, idempotent: true},
 		"vm_port":       {required: []string{"vm", "action"}, destructive: true, structured: true},
 	}
@@ -313,7 +313,7 @@ func TestDescriptions(t *testing.T) {
 	}
 	mentions := map[string][]string{
 		"instructions": {"never changes, clones", "can take minutes"},
-		"vm_get":       {"ssh", "key_path"},
+		"vm_get":       {"ssh", "key_path", "console_log"},
 		"vm_create":    {"cloud_init needs one of them", "can take minutes", "single-VM OVA or OVF", "limited to host_dirs"},
 		"vm_copy":      {"never writes hypervisor files", "vmh root other than <root>/files"},
 		"vm_port":      {"loopback address or an address of this host"},
@@ -321,7 +321,9 @@ func TestDescriptions(t *testing.T) {
 		"vm_clone":     {"cannot be cloned", "can take minutes"},
 		"vm_snapshot":  {"can take minutes"},
 		"vm_exec":      {"invalid_state"},
-		"vm_wait":      {"can take minutes", "shorter timeout_sec", "no user given", "rejected guest login is retried"},
+		"vm_wait":      {"can take minutes", "shorter timeout_sec", "no user given", "rejected guest login is retried", "may hard-reset a stuck VM that vmh manages", "at most twice per call", "recoveries", "Windows guests are never reset", "fails at once with not_ready", "another call would reset the VM again"},
+		"vm_providers": {"warnings", "Hyper-V", "max_reliable_cpus", "gives an appliance that many"},
+		"vm_ip":        {"DHCP", "since its current power-on", "a reset or a reboot inside the guest is not a new power-on"},
 	}
 	for name, phrases := range mentions {
 		for _, phrase := range phrases {
@@ -348,6 +350,8 @@ func TestPropertyDescriptions(t *testing.T) {
 	}{
 		{"vm_create", []string{"appliance"}, []string{"single VM", "serial ports, shared folders and remote display", "only .ova files"}},
 		{"vm_create", []string{"iso"}, []string{"plain ISO 9660 file"}},
+		{"vm_create", []string{"cpus"}, []string{"max_reliable_cpus", "1 for VirtualBox on Hyper-V hosts", "an appliance gets that many"}},
+		{"vm_create", []string{"nics", "model"}, []string{"virtio when omitted"}},
 		{"vm_create", []string{"disk_image"}, []string{"not a VMDK descriptor or a differencing disk"}},
 		{"vm_create", []string{"port_forwards", "host_ip"}, []string{"a loopback address or an address of this host"}},
 		{"vm_create", []string{"shared_folders", "read_only"}, []string{"folder of a VM vmh does not manage", "only <root>/files may be shared writable"}},

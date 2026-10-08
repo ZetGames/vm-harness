@@ -112,6 +112,14 @@ func finishClone(src, dst, name string) error {
 		}
 		v.set(unit+".fileName", seedFile)
 	}
+	ports := serialFiles(v)
+	for _, port := range ports {
+		v.set(port+"fileName", filepath.Base(v.get(port+"fileName")))
+	}
+	if len(ports) > 0 {
+		v.set("answer.msg.serial.file.open", "Replace")
+	}
+	v.set("msg.autoAnswer", "TRUE")
 	v.set("displayName", name)
 	return v.write(dst)
 }

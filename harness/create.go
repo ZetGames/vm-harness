@@ -112,7 +112,7 @@ func (m *Manager) prepareSpec(spec vm.Spec, provider string, info vm.HostInfo) (
 		return spec, err
 	}
 	spec.Provider = provider
-	if err := m.applySpecDefaults(&spec); err != nil {
+	if err := m.applySpecDefaults(&spec, info); err != nil {
 		return spec, err
 	}
 	if err := m.resolveSpecPaths(&spec); err != nil {
@@ -144,16 +144,21 @@ func (m *Manager) prepareSpec(spec vm.Spec, provider string, info vm.HostInfo) (
 	return spec, nil
 }
 
-func (m *Manager) applySpecDefaults(spec *vm.Spec) error {
+func (m *Manager) applySpecDefaults(spec *vm.Spec, info vm.HostInfo) error {
 	if spec.CPUs < 0 || spec.MemoryMB < 0 || spec.DiskGB < 0 {
 		return fmt.Errorf("cpus, memory and disk size must not be negative: %w", vm.ErrInvalid)
 	}
 	if spec.Appliance == "" {
 		d := m.cfg.Defaults
+		if info.MaxReliableCPUs > 0 {
+			d.CPUs = min(d.CPUs, info.MaxReliableCPUs)
+		}
 		spec.CPUs = cmp.Or(spec.CPUs, d.CPUs)
 		spec.MemoryMB = cmp.Or(spec.MemoryMB, d.MemoryMB)
 		spec.DiskGB = cmp.Or(spec.DiskGB, d.DiskGB)
 		spec.OSType = cmp.Or(spec.OSType, d.OSType)
+	} else if info.MaxReliableCPUs > 0 {
+		spec.CPUs = cmp.Or(spec.CPUs, info.MaxReliableCPUs)
 	}
 	if len(spec.NICs) == 0 {
 		spec.NICs = []vm.NIC{{Mode: vm.NetNAT}}

@@ -488,3 +488,46 @@ func mustGet(t *testing.T, p *memprovider.Provider, ref string) vm.Machine {
 	}
 	return mach
 }
+
+func TestWaitReportsAutomaticResets(t *testing.T) {
+	f := newFixture(t)
+	path := filepath.Join(t.TempDir(), "serial.log")
+	if err := os.WriteFile(path, []byte("Begin: Loading essential drivers ... "), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	boot := managed("boot", vm.StateRunning)
+	boot.ConsoleLog = path
+	f.vbox.Put(boot)
+	booted := false
+	f.vbox.ExecFunc = func(vm.Machine, vm.ExecRequest) (vm.ExecResult, error) {
+		if booted {
+			return vm.ExecResult{}, nil
+		}
+		log, err := os.OpenFile(path, os.O_APPEND|os.O_WRONLY, 0)
+		if err != nil {
+			return vm.ExecResult{}, err
+		}
+		defer log.Close()
+		if _, err := log.WriteString("\r\n[    1.48] Kernel panic - not syncing: Attempted to kill init! exitcode=0x00000009\r\n"); err != nil {
+			return vm.ExecResult{}, err
+		}
+		return vm.ExecResult{}, vm.ErrNotReady
+	}
+	f.vbox.ResetFunc = func(vm.Machine) { booted = true }
+	res := callOK[harness.WaitResult](t, f, "vm_wait", map[string]any{"vm": "boot", "for": "guest", "user": "root", "password": "pw"})
+	if !slices.Equal(res.Recoveries, []string{"kernel panic: Attempted to kill init! exitcode=0x00000009 — reset"}) {
+		t.Fatalf("recoveries = %q", res.Recoveries)
+	}
+	if mach := callOK[vm.Machine](t, f, "vm_get", map[string]any{"vm": "boot"}); mach.ConsoleLog != path {
+		t.Errorf("console_log = %q", mach.ConsoleLog)
+	}
+}
+
+func TestProvidersCarryWarnings(t *testing.T) {
+	f := newFixture(t)
+	f.vbox.Warnings = []string{"VirtualBox runs on top of Hyper-V"}
+	out := callOK[providersOutput](t, f, "vm_providers", nil)
+	if !slices.Equal(out.Providers[0].Info.Warnings, f.vbox.Warnings) || out.Providers[1].Info.Warnings != nil {
+		t.Fatalf("providers = %+v", out.Providers)
+	}
+}

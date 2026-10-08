@@ -48,6 +48,7 @@ func newTestEnv(t *testing.T) *testEnv {
 		Runner:       fake,
 	})
 	p.inventory = filepath.Join(t.TempDir(), "inventory.vmls")
+	p.leases = nil
 	return &testEnv{Provider: p, fake: fake}
 }
 

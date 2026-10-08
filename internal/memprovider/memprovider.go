@@ -22,10 +22,13 @@ type machine struct {
 }
 
 type Provider struct {
-	ProviderName string
-	Features     []string
-	ExecFunc     func(m vm.Machine, req vm.ExecRequest) (vm.ExecResult, error)
-	SoftStopFunc func(m vm.Machine) error
+	ProviderName    string
+	Features        []string
+	Warnings        []string
+	MaxReliableCPUs int
+	ExecFunc        func(m vm.Machine, req vm.ExecRequest) (vm.ExecResult, error)
+	SoftStopFunc    func(m vm.Machine) error
+	ResetFunc       func(m vm.Machine)
 
 	mu       sync.Mutex
 	machines map[string]*machine
@@ -50,7 +53,13 @@ func (p *Provider) Info(context.Context) (vm.HostInfo, error) {
 	if features == nil {
 		features = allFeatures
 	}
-	return vm.HostInfo{Provider: p.ProviderName, Version: "mem", Features: slices.Clone(features)}, nil
+	return vm.HostInfo{
+		Provider:        p.ProviderName,
+		Version:         "mem",
+		Features:        slices.Clone(features),
+		Warnings:        slices.Clone(p.Warnings),
+		MaxReliableCPUs: p.MaxReliableCPUs,
+	}, nil
 }
 
 func (p *Provider) Calls() []string {
@@ -327,7 +336,22 @@ func (p *Provider) Resume(_ context.Context, ref string) error {
 }
 
 func (p *Provider) Reset(_ context.Context, ref string) error {
-	return p.transition("reset", ref, []vm.State{vm.StateRunning}, vm.StateRunning)
+	if err := p.transition("reset", ref, []vm.State{vm.StateRunning}, vm.StateRunning); err != nil {
+		return err
+	}
+	p.mu.Lock()
+	m, err := p.find(ref)
+	if err != nil {
+		p.mu.Unlock()
+		return err
+	}
+	snap := snapshotOf(m)
+	fn := p.ResetFunc
+	p.mu.Unlock()
+	if fn != nil {
+		fn(snap)
+	}
+	return nil
 }
 
 func (p *Provider) Suspend(_ context.Context, ref string) error {

@@ -24,8 +24,10 @@ import (
 const (
 	hardwareVersion = "20"
 	seedFile        = "seed.iso"
+	consoleFile     = "serial.log"
 	maxNICs         = 10
 	maxSATAUnits    = 30
+	maxSerialPorts  = 4
 )
 
 var vmnetPattern = regexp.MustCompile(`^(/dev/)?vmnet\d+$`)
@@ -117,6 +119,7 @@ func (p *Provider) build(ctx context.Context, spec vm.Spec, path string) error {
 		if err := attachSeed(v); err != nil {
 			return err
 		}
+		addConsoleLog(v)
 	}
 	if err := v.write(path); err != nil {
 		return err
@@ -284,6 +287,13 @@ func attachSeed(v *vmxFile) error {
 	v.set("sata0.present", "TRUE")
 	attachCDROM(v, unit, seedFile)
 	return nil
+}
+
+func addConsoleLog(v *vmxFile) {
+	v.set("serial0.present", "TRUE")
+	v.set("serial0.fileType", "file")
+	v.set("serial0.fileName", consoleFile)
+	v.set("answer.msg.serial.file.open", "Replace")
 }
 
 func freeSATAUnit(v *vmxFile) (string, error) {

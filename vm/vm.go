@@ -27,6 +27,7 @@ type Machine struct {
 	NICs            []NIC             `json:"nics,omitempty"`
 	PortForwards    []PortForward     `json:"port_forwards,omitempty"`
 	CurrentSnapshot string            `json:"current_snapshot,omitempty"`
+	ConsoleLog      string            `json:"console_log,omitempty"`
 	SSH             *SSHAccess        `json:"ssh,omitempty"`
 }
 
@@ -163,11 +164,13 @@ type CopyRequest struct {
 }
 
 type HostInfo struct {
-	Provider string   `json:"provider"`
-	Version  string   `json:"version,omitempty"`
-	Binary   string   `json:"binary,omitempty"`
-	Root     string   `json:"root,omitempty"`
-	Features []string `json:"features"`
+	Provider        string   `json:"provider"`
+	Version         string   `json:"version,omitempty"`
+	Binary          string   `json:"binary,omitempty"`
+	Root            string   `json:"root,omitempty"`
+	Features        []string `json:"features"`
+	Warnings        []string `json:"warnings,omitempty"`
+	MaxReliableCPUs int      `json:"max_reliable_cpus,omitempty"`
 }
 
 const (

@@ -1,6 +1,7 @@
 package vmware
 
 import (
+	"cmp"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -60,4 +61,14 @@ func inventoryPath() string {
 		return filepath.Join(home, ".vmware", "inventory.vmls")
 	}
 	return ""
+}
+
+func leaseFiles(goos string) []string {
+	switch goos {
+	case "windows":
+		return []string{filepath.Join(cmp.Or(os.Getenv("ProgramData"), `C:\ProgramData`), "VMware", "vmnetdhcp.leases")}
+	case "darwin":
+		return []string{"/var/db/vmware/*.leases"}
+	}
+	return []string{"/etc/vmware/vmnet*/dhcpd/dhcpd.leases"}
 }

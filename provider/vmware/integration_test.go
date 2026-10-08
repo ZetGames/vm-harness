@@ -32,11 +32,11 @@ func TestIntegration(t *testing.T) {
 	}
 
 	name := "vmh-it-" + strings.ToLower(rand.Text()[:8])
-	linked, running, full, imported, mac := name+"-linked", name+"-hot", name+"-full", name+"-ova", name+"-mac"
+	linked, running, full, imported, mac, macCopy := name+"-linked", name+"-hot", name+"-full", name+"-ova", name+"-mac", name+"-mac-copy"
 	t.Cleanup(func() {
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Minute)
 		defer cancel()
-		for _, vmName := range []string{imported, linked, running, full, mac, name} {
+		for _, vmName := range []string{imported, linked, running, full, macCopy, mac, name} {
 			path := filepath.Join(root, vmName, vmName+".vmx")
 			if !isFile(path) {
 				continue
@@ -82,6 +82,10 @@ func TestIntegration(t *testing.T) {
 	if !isFile(filepath.Join(root, name, seedFile)) || !isFile(filepath.Join(root, name, name+".vmdk")) || !isFile(metaPath(path)) {
 		t.Fatal("disk, seed or metadata file missing")
 	}
+	console := filepath.Join(root, name, consoleFile)
+	if m.ConsoleLog != console {
+		t.Fatalf("console log = %q, want %q", m.ConsoleLog, console)
+	}
 	must(p.SetMeta(ctx, name, map[string]string{vm.MetaManaged: path}))
 	alias := path
 	if runtime.GOOS == "windows" {
@@ -96,9 +100,13 @@ func TestIntegration(t *testing.T) {
 		t.Fatalf("list misses %s", path)
 	}
 
+	starting := time.Now()
 	must(p.Start(ctx, name, false))
 	if s := state(name); s != vm.StateRunning {
 		t.Fatalf("state after start = %s", s)
+	}
+	if on := powerOnTime(path); on.Before(starting.Add(-leaseSkew)) || on.After(time.Now()) {
+		t.Fatalf("power-on time %v from vmware.log is outside the start call that began at %v", on, starting.UTC())
 	}
 	must(p.Start(ctx, name, false))
 	before := readFile(t, path)
@@ -153,6 +161,9 @@ func TestIntegration(t *testing.T) {
 	if s := state(name); s != vm.StateStopped {
 		t.Fatalf("state after hard stop = %s", s)
 	}
+	if !isFile(console) || !strings.Contains(readFile(t, filepath.Join(root, name, "vmware.log")), "'Replace' as the answer for 'msg.serial.file.open'") {
+		t.Fatal("a power-on over an existing console log must replace it without asking")
+	}
 	wantKind(t, p.Stop(ctx, name, true), vm.ErrInvalidState)
 	if m, err := p.Get(ctx, name); err != nil || m.Meta["stage"] != "running" || m.Labels["hot"] != "yes" || !m.Managed {
 		t.Fatalf("meta lost across power cycles: %+v, %v", m.Meta, err)
@@ -193,6 +204,9 @@ func TestIntegration(t *testing.T) {
 	if !isFile(filepath.Join(root, linked, seedFile)) {
 		t.Fatal("seed not written into the linked clone")
 	}
+	if lc.ConsoleLog != filepath.Join(root, linked, consoleFile) {
+		t.Fatalf("linked clone console log = %q", lc.ConsoleLog)
+	}
 	_, err = p.Clone(ctx, name, vm.CloneOptions{Name: name + "-live", Linked: true, Snapshot: "live"})
 	wantKind(t, err, vm.ErrInvalidState)
 	if _, err := os.Stat(filepath.Join(root, name+"-live")); !os.IsNotExist(err) {
@@ -205,7 +219,7 @@ func TestIntegration(t *testing.T) {
 	must(p.Stop(ctx, name, true))
 	fc, err := p.Clone(ctx, name, vm.CloneOptions{Name: full})
 	must(err)
-	if fc.Name != full || !isFile(filepath.Join(root, full, seedFile)) {
+	if fc.Name != full || !isFile(filepath.Join(root, full, seedFile)) || fc.ConsoleLog != filepath.Join(root, full, consoleFile) {
 		t.Fatalf("full clone = %+v", fc)
 	}
 	if snapshots, err := p.Snapshots(ctx, name); err != nil || len(snapshots) != 2 || snapshots[1].Description != "чистая база" {
@@ -231,6 +245,9 @@ func TestIntegration(t *testing.T) {
 	}
 	must(p.Reset(ctx, linked))
 	must(p.Stop(ctx, linked, true))
+	if !isFile(filepath.Join(root, linked, consoleFile)) {
+		t.Fatal("the linked clone did not write its console log into its own folder")
+	}
 	if m, err := p.Get(ctx, full); err != nil || m.Labels["copy"] != "yes" || m.Meta["stage"] != "" {
 		t.Fatalf("full clone meta = %+v, %v", m.Meta, err)
 	}
@@ -242,6 +259,29 @@ func TestIntegration(t *testing.T) {
 	}
 	must(p.Start(ctx, mac, false))
 	must(p.Stop(ctx, mac, true))
+	uiMade, err := readVMX(mm.ConfigPath)
+	must(err)
+	uiMade.remove("msg.autoAnswer")
+	uiMade.set("serial0.present", "TRUE")
+	uiMade.set("serial0.fileType", "file")
+	uiMade.set("serial0.fileName", filepath.Join(root, mac, "com1.txt"))
+	must(uiMade.write(mm.ConfigPath))
+	mc, err := p.Clone(ctx, mac, vm.CloneOptions{Name: macCopy})
+	must(err)
+	if mc.ConsoleLog != filepath.Join(root, macCopy, "com1.txt") {
+		t.Fatalf("clone console log = %q", mc.ConsoleLog)
+	}
+	for range 2 {
+		startCtx, cancel := context.WithTimeout(ctx, 2*time.Minute)
+		err := p.Start(startCtx, macCopy, false)
+		cancel()
+		must(err)
+		must(p.Stop(ctx, macCopy, true))
+	}
+	if log := readFile(t, filepath.Join(root, macCopy, vmwareLog)); !strings.Contains(log, "'Replace' as the answer for 'msg.serial.file.open'") {
+		t.Fatal("the second power-on of a clone must replace its serial file without asking")
+	}
+	must(p.Delete(ctx, macCopy))
 	must(p.Delete(ctx, mac))
 
 	if p.ovftool != "" {
@@ -250,7 +290,7 @@ func TestIntegration(t *testing.T) {
 		ova := hostileOVA(ctx, t, p.ovftool, filepath.Join(root, full, full+".vmx"), outside)
 		im, err := p.Create(ctx, vm.Spec{Name: imported, Appliance: ova, CPUs: 1, MemoryMB: 96, Labels: map[string]string{"from": "ova"}})
 		must(err)
-		if im.Name != imported || im.MemoryMB != 96 || im.Labels["from"] != "ova" {
+		if im.Name != imported || im.MemoryMB != 96 || im.Labels["from"] != "ova" || im.ConsoleLog != "" {
 			t.Fatalf("imported = %+v", im)
 		}
 		v, err := readVMX(im.ConfigPath)
@@ -277,7 +317,7 @@ func TestIntegration(t *testing.T) {
 	must(p.DeleteSnapshot(ctx, name, "LIVE"))
 	must(p.Delete(ctx, full))
 	must(p.Delete(ctx, name))
-	for _, vmName := range []string{name, linked, running, full, imported, mac} {
+	for _, vmName := range []string{name, linked, running, full, imported, mac, macCopy} {
 		if _, err := os.Stat(filepath.Join(root, vmName)); !os.IsNotExist(err) {
 			t.Errorf("%s folder still exists: %v", vmName, err)
 		}

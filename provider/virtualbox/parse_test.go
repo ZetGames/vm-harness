@@ -105,6 +105,34 @@ func TestParseVMInfoKeepsFirstValue(t *testing.T) {
 	}
 }
 
+func TestConsoleLog(t *testing.T) {
+	dir := t.TempDir()
+	first, second := filepath.Join(dir, "serial.log"), filepath.Join(dir, "com2,x.log")
+	cases := []struct {
+		name  string
+		lines []string
+		want  string
+	}{
+		{"file", []string{`uart1="0x03f8,4"`, `uartmode1="file,` + first + `"`, `uart2="off"`}, first},
+		{"prefers uart1", []string{`uart1="0x03f8,4"`, `uartmode1="file,` + first + `"`, `uart2="0x02f8,3"`, `uartmode2="file,` + second + `"`}, first},
+		{"later uart", []string{`uart1="0x03f8,4"`, `uartmode1="tcpserver,28998"`, `uart2="off"`, `uart3="0x03e8,4"`, `uartmode3="file,` + second + `"`}, second},
+		{"disabled uart", []string{`uart1="off"`, `uartmode1="file,` + first + `"`}, ""},
+		{"host device", []string{`uart1="0x03f8,4"`, `uartmode1="` + first + `"`}, ""},
+		{"relative file", []string{`uart1="0x03f8,4"`, `uartmode1="file,serial.log"`}, ""},
+		{"empty file", []string{`uart1="0x03f8,4"`, `uartmode1="file,"`}, ""},
+		{"disconnected", []string{`uart1="0x03f8,4"`, `uartmode1="disconnected"`}, ""},
+		{"no uarts", []string{`name="demo"`}, ""},
+	}
+	for _, c := range cases {
+		if got := parseVMInfo(vmInfoText(c.lines...)).consoleLog(); got != c.want {
+			t.Errorf("%s: console log = %q, want %q", c.name, got, c.want)
+		}
+	}
+	if got := parseVMInfo(fixture(t, "showvminfo-imported-evil.txt")).consoleLog(); got != "" {
+		t.Errorf("tcp server uart gave console log %q", got)
+	}
+}
+
 func TestParseForwardsOfFirstNICOnly(t *testing.T) {
 	out := strings.Join([]string{
 		`natnet1="nat"`,
@@ -279,6 +307,7 @@ func TestClassify(t *testing.T) {
 		{"err-nat-rule-exists.txt", vm.ErrExists},
 		{"err-already-running.txt", vm.ErrInvalidState},
 		{"err-locked.txt", vm.ErrInvalidState},
+		{"err-lock-pending.txt", vm.ErrInvalidState},
 		{"err-not-running.txt", vm.ErrInvalidState},
 		{"err-guest-not-running.txt", vm.ErrInvalidState},
 		{"err-already-paused.txt", vm.ErrInvalidState},
@@ -324,6 +353,7 @@ func TestTransient(t *testing.T) {
 	cases := map[string]bool{
 		fixture(t, "err-access-denied.txt"):     true,
 		fixture(t, "err-locked.txt"):            true,
+		fixture(t, "err-lock-pending.txt"):      true,
 		fixture(t, "err-unregister-locked.txt"): true,
 		"VBoxManage.exe: error: The object is not ready\r\nVBoxManage.exe: error: Details: code E_ACCESSDENIED (0x80070005)\r\n":             true,
 		"VBoxManage.exe: error: The object functionality is limited\r\nVBoxManage.exe: error: Details: code E_ACCESSDENIED (0x80070005)\r\n": false,

@@ -70,7 +70,7 @@ func TestCreateGolden(t *testing.T) {
 				t.Fatalf("commands = %q, want %q", got, want)
 			}
 			checkGolden(t, c.golden, readFile(t, path))
-			if m.ID != path || m.Name != c.spec.Name || m.State != vm.StateStopped || m.Managed {
+			if m.ID != path || m.Name != c.spec.Name || m.State != vm.StateStopped || m.Managed || m.ConsoleLog != "" {
 				t.Fatalf("machine = %+v", m)
 			}
 			meta := specMeta(c.spec)
@@ -88,11 +88,15 @@ func TestCreateWithCloudInit(t *testing.T) {
 		Name: "cloud", OSType: "ubuntu-64", CPUs: 2, MemoryMB: 2048, DiskGB: 10,
 		CloudInit: &vm.CloudInit{User: "vmh", SSHAuthorizedKeys: []string{"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIExample test"}},
 	}
-	if _, err := e.Create(context.Background(), spec); err != nil {
+	m, err := e.Create(context.Background(), spec)
+	if err != nil {
 		t.Fatal(err)
 	}
 	dir := filepath.Join(e.root, "cloud")
 	checkGolden(t, "cloud-init.vmx", readFile(t, filepath.Join(dir, "cloud.vmx")))
+	if want := filepath.Join(dir, consoleFile); m.ConsoleLog != want {
+		t.Errorf("console log = %q, want %q", m.ConsoleLog, want)
+	}
 	iso := readFile(t, filepath.Join(dir, seedFile))
 	if len(iso) < 0x8006 || iso[0x8001:0x8006] != "CD001" {
 		t.Fatalf("seed is not an iso9660 image (%d bytes)", len(iso))
@@ -241,6 +245,41 @@ func TestCreateFromApplianceDropsHostDevices(t *testing.T) {
 	}
 	if m.State != vm.StateStopped {
 		t.Errorf("state = %s", m.State)
+	}
+}
+
+func TestCreateApplianceWithCloudInitGetsOwnConsole(t *testing.T) {
+	e := newTestEnv(t)
+	e.fake.OnFunc("--acceptAllEulas", importWrites(fixture(t, "vmx/ovftool-host-devices.vmx")))
+	m, err := e.Create(context.Background(), vm.Spec{Name: "app", Appliance: `C:\images\web.ova`, CloudInit: &vm.CloudInit{User: "vmh"}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	dir := filepath.Join(e.root, "app")
+	if want := filepath.Join(dir, consoleFile); m.ConsoleLog != want {
+		t.Errorf("console log = %q, want %q", m.ConsoleLog, want)
+	}
+	v, err := readVMX(m.ConfigPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := map[string]string{
+		"serial0.present":             "TRUE",
+		"serial0.fileType":            "file",
+		"serial0.fileName":            consoleFile,
+		"serial0.startConnected":      "",
+		"serial0.yieldOnMsrRead":      "",
+		"serial1.present":             "",
+		"serial1.fileName":            "",
+		"answer.msg.serial.file.open": "Replace",
+	}
+	for key, value := range want {
+		if got := v.get(key); got != value {
+			t.Errorf("%s = %q, want %q", key, got, value)
+		}
+	}
+	if !isFile(filepath.Join(dir, seedFile)) {
+		t.Error("seed not written")
 	}
 }
 

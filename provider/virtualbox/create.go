@@ -276,11 +276,6 @@ func (p *Provider) unregisteredISO(ctx context.Context, iso string) (string, err
 }
 
 func (p *Provider) configure(ctx context.Context, id, dir, iso string, spec vm.Spec, nics, rules []string) error {
-	if args := hardwareArgs(id, dir, spec, nics); len(args) > 2 {
-		if _, err := p.run(ctx, args...); err != nil {
-			return err
-		}
-	}
 	var imported vmInfo
 	if spec.Appliance != "" {
 		var err error
@@ -290,8 +285,16 @@ func (p *Provider) configure(ctx context.Context, id, dir, iso string, spec vm.S
 		if len(rules) > 0 && len(spec.NICs) == 0 && imported.fields["nic1"] != "nat" {
 			return errForwardNeedsNAT
 		}
-	} else if err := p.addDisks(ctx, id, dir, spec); err != nil {
-		return err
+	}
+	if args := hardwareArgs(id, dir, spec, imported.fields["ostype"], nics); len(args) > 2 {
+		if _, err := p.run(ctx, args...); err != nil {
+			return err
+		}
+	}
+	if spec.Appliance == "" {
+		if err := p.addDisks(ctx, id, dir, spec); err != nil {
+			return err
+		}
 	}
 	if spec.CloudInit != nil {
 		if err := p.attachSeed(ctx, id, dir, spec, imported); err != nil {
@@ -343,7 +346,7 @@ func (p *Provider) writeMeta(ctx context.Context, id, iso string, spec vm.Spec) 
 	return p.SetMeta(ctx, id, meta)
 }
 
-func hardwareArgs(id, dir string, spec vm.Spec, nics []string) []string {
+func hardwareArgs(id, dir string, spec vm.Spec, importedOS string, nics []string) []string {
 	args := []string{"modifyvm", id}
 	if spec.Appliance == "" {
 		windows := vm.IsWindows(spec.OSType)
@@ -376,12 +379,24 @@ func hardwareArgs(id, dir string, spec vm.Spec, nics []string) []string {
 	} else if spec.Firmware != "" {
 		args = append(args, "--firmware", strings.ToLower(spec.Firmware))
 	}
-	args = append(args, "--paravirt-provider", "hyperv")
 	args = append(args, nics...)
+	if virtioNIC(spec, importedOS) {
+		args = append(args, "--nic-type1", "virtio")
+	}
 	if spec.CloudInit != nil {
 		args = append(args, "--uart1", "0x3F8", "4", "--uartmode1", "file", filepath.Join(dir, serialName))
 	}
 	return args
+}
+
+func virtioNIC(spec vm.Spec, importedOS string) bool {
+	if spec.CloudInit == nil || vm.IsWindows(spec.OSType) || vm.IsWindows(importedOS) {
+		return false
+	}
+	if len(spec.NICs) == 0 {
+		return spec.Appliance == ""
+	}
+	return spec.NICs[0].Model == "" && spec.NICs[0].Mode != vm.NetNone
 }
 
 func nicArgs(nics []vm.NIC) ([]string, error) {

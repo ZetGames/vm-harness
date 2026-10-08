@@ -12,6 +12,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"runtime"
 	"slices"
 	"strconv"
 	"strings"
@@ -19,6 +20,7 @@ import (
 	"time"
 
 	"github.com/fl4metf/vm-harness/cloudinit"
+	"github.com/fl4metf/vm-harness/internal/hostinfo"
 	"github.com/fl4metf/vm-harness/runner"
 	"github.com/fl4metf/vm-harness/vm"
 )
@@ -73,8 +75,11 @@ func TestIntegration(t *testing.T) {
 		t.Fatalf("create: %v", err)
 	}
 	if m.Managed || m.Labels["team"] != "qa" || m.Meta[vm.MetaOSType] != "ubuntu" || m.OSType != "Ubuntu_64" ||
-		m.CPUs != 1 || m.MemoryMB != 128 || m.State != vm.StateStopped || len(m.NICs) != 1 || m.NICs[0].Mode != vm.NetNAT {
+		m.CPUs != 1 || m.MemoryMB != 128 || m.State != vm.StateStopped || len(m.NICs) != 1 || m.NICs[0].Mode != vm.NetNAT || m.NICs[0].Model != "virtio" {
 		t.Fatalf("created machine = %+v", m)
+	}
+	if info, err := p.inspect(ctx, m.ID); err != nil || info.fields["paravirtprovider"] != "default" {
+		t.Fatalf("paravirt provider = %q, %v", info.fields["paravirtprovider"], err)
 	}
 	if !hasForward(m, "ssh") {
 		t.Fatalf("forwards = %+v", m.PortForwards)
@@ -82,6 +87,9 @@ func TestIntegration(t *testing.T) {
 	dir := filepath.Join(root, name)
 	if _, err := os.Stat(filepath.Join(dir, seedName)); err != nil {
 		t.Fatalf("seed: %v", err)
+	}
+	if !samePath(m.ConsoleLog, filepath.Join(dir, serialName)) {
+		t.Fatalf("console log = %q", m.ConsoleLog)
 	}
 	if err := p.SetMeta(ctx, m.ID, map[string]string{vm.MetaManaged: m.ID}); err != nil {
 		t.Fatalf("tag: %v", err)
@@ -214,6 +222,26 @@ func TestIntegration(t *testing.T) {
 			t.Errorf("list %s still mentions the test vms:\n%s", list, out)
 		}
 	}
+}
+
+func TestIntegrationHostWarnings(t *testing.T) {
+	p := integrationProvider(t)
+	info, err := p.Info(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	platform := hostinfo.Detect()
+	hyperV := runtime.GOOS == "windows" && platform == hostinfo.HyperVRoot
+	if got := slices.Contains(info.Warnings, hyperVWarning); got != hyperV {
+		t.Fatalf("hyper-v warning = %v on platform %d: %q", got, platform, info.Warnings)
+	}
+	if want := platform != hostinfo.BareMetal && !hyperV; slices.Contains(info.Warnings, nestedWarning) != want {
+		t.Fatalf("nested warning missing or unexpected on platform %d: %q", platform, info.Warnings)
+	}
+	if hyperV != (info.MaxReliableCPUs == 1) {
+		t.Fatalf("max reliable cpus = %d on platform %d", info.MaxReliableCPUs, platform)
+	}
+	t.Logf("platform %d, max reliable cpus %d, warnings: %q", platform, info.MaxReliableCPUs, info.Warnings)
 }
 
 func TestIntegrationImportResetsHostSettings(t *testing.T) {
@@ -517,7 +545,7 @@ func checkImport(t *testing.T, p *Provider, src vm.Machine, name string) vm.Mach
 	if err != nil {
 		t.Fatalf("import: %v", err)
 	}
-	if !samePath(m.ConfigPath, filepath.Join(p.root, name, name+".vbox")) || m.CPUs != 1 || m.Managed {
+	if !samePath(m.ConfigPath, filepath.Join(p.root, name, name+".vbox")) || m.CPUs != 1 || m.Managed || m.ConsoleLog != "" {
 		t.Fatalf("imported machine = %+v", m)
 	}
 	if want := map[string]string{vm.MetaOSType: "ubuntu"}; !reflect.DeepEqual(m.Meta, want) {
@@ -568,6 +596,9 @@ func checkClone(t *testing.T, p *Provider, c vm.Machine, dir string) {
 	}
 	if got := info.fields["uartmode1"]; !samePath(strings.TrimPrefix(got, "file,"), filepath.Join(dir, serialName)) {
 		t.Fatalf("%s serial port = %q", c.Name, got)
+	}
+	if !samePath(c.ConsoleLog, filepath.Join(dir, serialName)) {
+		t.Fatalf("%s console log = %q", c.Name, c.ConsoleLog)
 	}
 	if c.State != vm.StateStopped || !hasForward(c, "ssh") {
 		t.Fatalf("clone = %+v", c)

@@ -10,7 +10,7 @@ type createInput struct {
 	Name          string            `json:"name" jsonschema:"name of the new VM: letters, digits, dot, underscore or dash, up to 63 characters"`
 	Provider      string            `json:"provider,omitempty" jsonschema:"virtualbox or vmware, default the configured provider or the first available one"`
 	OSType        string            `json:"os_type,omitempty" jsonschema:"guest OS: arch, debian, fedora, freebsd, linux, oracle, other, rhel, ubuntu, windows10, windows11, windows2019, windows2022 or windows2025; default linux; a native provider OS id is passed through"`
-	CPUs          int               `json:"cpus,omitempty" jsonschema:"virtual CPUs, default 2 unless configured otherwise"`
+	CPUs          int               `json:"cpus,omitempty" jsonschema:"virtual CPUs; when omitted 2 unless configured otherwise and an appliance keeps its own count, but when the provider reports max_reliable_cpus (1 for VirtualBox on Hyper-V hosts) the default is capped at it and an appliance gets that many; a value you pass is used as given"`
 	MemoryMB      int               `json:"memory_mb,omitempty" jsonschema:"memory in MiB, default 2048 unless configured otherwise"`
 	DiskGB        int               `json:"disk_gb,omitempty" jsonschema:"disk size in GiB, default 20 unless configured otherwise; a smaller disk_image is grown to it"`
 	Firmware      string            `json:"firmware,omitempty" jsonschema:"bios or efi"`
@@ -29,7 +29,7 @@ type createInput struct {
 type nic struct {
 	Mode    string `json:"mode" jsonschema:"nat, bridged, hostonly, natnetwork, internal, custom or none"`
 	Adapter string `json:"adapter,omitempty" jsonschema:"VirtualBox: host interface for bridged and hostonly, network name for natnetwork and internal; VMware: a virtual network such as vmnet2"`
-	Model   string `json:"model,omitempty" jsonschema:"emulated NIC model, such as 82540EM or virtio on VirtualBox and e1000e or vmxnet3 on VMware"`
+	Model   string `json:"model,omitempty" jsonschema:"emulated NIC model, such as 82540EM or virtio on VirtualBox and e1000e or vmxnet3 on VMware; VirtualBox gives the first NIC of a Linux cloud_init VM virtio when omitted"`
 	MAC     string `json:"mac,omitempty" jsonschema:"fixed MAC address, generated when omitted"`
 }
 

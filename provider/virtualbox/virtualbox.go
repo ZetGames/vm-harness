@@ -15,6 +15,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/fl4metf/vm-harness/internal/hostinfo"
 	"github.com/fl4metf/vm-harness/runner"
 	"github.com/fl4metf/vm-harness/vm"
 )
@@ -30,6 +31,7 @@ type Provider struct {
 	root      string
 	runner    runner.Runner
 	retryWait time.Duration
+	platform  hostinfo.Platform
 
 	osTypesMu sync.Mutex
 	osTypes   map[string]string
@@ -48,6 +50,18 @@ var installPaths = []string{
 	"/Applications/VirtualBox.app/Contents/MacOS/VBoxManage",
 }
 
+const (
+	hyperVWarning = "VirtualBox runs on top of Hyper-V (the Windows hypervisor is active): VMs with more than one vCPU may hang " +
+		"at boot, so vmh gives new and imported VirtualBox VMs 1 vCPU unless you ask for more (clones keep the source's count), " +
+		"and while waiting for ip, ssh or guest it resets stuck boots of the non-Windows VMs it manages that have a serial " +
+		"console log (such as those created with cloud-init). The Windows hypervisor is loaded by the Hyper-V feature, " +
+		"Memory integrity (VBS), WSL2, Docker Desktop, Windows Sandbox and Virtual Machine Platform; with all of them off " +
+		"(or after `bcdedit /set hypervisorlaunchtype off` as administrator and a reboot) VirtualBox uses AMD-V/VT-x " +
+		"directly and is fast and reliable"
+	nestedWarning = "This host itself runs under a hypervisor (nested virtualization): VirtualBox works only when the outer " +
+		"hypervisor passes AMD-V/VT-x through to it, and its VMs boot and run more slowly than on physical hardware"
+)
+
 var features = []string{
 	vm.FeatureGuestExec, vm.FeatureGuestCopy, vm.FeatureScreenshot, vm.FeaturePortForward,
 	vm.FeatureLinkedClone, vm.FeatureSnapshots, vm.FeatureAppliance, vm.FeatureDiskImage,
@@ -55,7 +69,13 @@ var features = []string{
 }
 
 func New(opts Options) *Provider {
-	p := &Provider{bin: opts.VBoxManage, root: opts.Root, runner: opts.Runner, retryWait: 300 * time.Millisecond}
+	p := &Provider{
+		bin:       opts.VBoxManage,
+		root:      opts.Root,
+		runner:    opts.Runner,
+		retryWait: 300 * time.Millisecond,
+		platform:  hostPlatform(),
+	}
 	if p.bin == "" {
 		p.bin = discover()
 	}
@@ -68,6 +88,14 @@ func New(opts Options) *Provider {
 		}
 	}
 	return p
+}
+
+func hostPlatform() hostinfo.Platform {
+	platform := hostinfo.Detect()
+	if platform == hostinfo.HyperVRoot && runtime.GOOS != "windows" {
+		return hostinfo.Guest
+	}
+	return platform
 }
 
 func discover() string {
@@ -108,6 +136,13 @@ func (p *Provider) Info(ctx context.Context) (vm.HostInfo, error) {
 	major, _, _ := strings.Cut(info.Version, ".")
 	if n, err := strconv.Atoi(major); err != nil || n < 7 {
 		return info, fmt.Errorf("VirtualBox 7.0 or newer required, found %q: %w", info.Version, vm.ErrUnavailable)
+	}
+	switch p.platform {
+	case hostinfo.HyperVRoot:
+		info.Warnings = []string{hyperVWarning}
+		info.MaxReliableCPUs = 1
+	case hostinfo.Guest:
+		info.Warnings = []string{nestedWarning}
 	}
 	return info, nil
 }
@@ -161,6 +196,7 @@ func (p *Provider) commandError(args []string, res runner.Result) error {
 var transientErrors = []string{
 	"is already locked for a session (or being unlocked)",
 	"is already locked by a session (or being locked or unlocked)",
+	"already has a lock request pending",
 	"while it is locked",
 	"E_ACCESSDENIED",
 }

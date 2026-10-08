@@ -82,9 +82,10 @@ type WaitRequest struct {
 }
 
 type WaitResult struct {
-	Machine   vm.Machine `json:"machine"`
-	IP        string     `json:"ip,omitempty"`
-	ElapsedMS int64      `json:"elapsed_ms"`
+	Machine    vm.Machine `json:"machine"`
+	IP         string     `json:"ip,omitempty"`
+	ElapsedMS  int64      `json:"elapsed_ms"`
+	Recoveries []string   `json:"recoveries,omitempty"`
 }
 
 type sshClient struct {
@@ -96,14 +97,16 @@ type sshClient struct {
 }
 
 type Manager struct {
-	cfg       Config
-	realRoot  string
-	providers []vm.Provider
-	log       *slog.Logger
-	poll      time.Duration
-	ssh       sshClient
-	creating  chan struct{}
-	locks     lockTable
+	cfg        Config
+	realRoot   string
+	providers  []vm.Provider
+	log        *slog.Logger
+	poll       time.Duration
+	bootStall  time.Duration
+	bootResets int
+	ssh        sshClient
+	creating   chan struct{}
+	locks      lockTable
 }
 
 func New(cfg Config, providers ...vm.Provider) *Manager {
@@ -123,11 +126,13 @@ func New(cfg Config, providers ...vm.Provider) *Manager {
 		return cmp.Compare(preference(a.Name()), preference(b.Name()))
 	})
 	return &Manager{
-		cfg:       cfg,
-		realRoot:  protectedPath(cfg.Root),
-		providers: ordered,
-		log:       logger,
-		poll:      time.Second,
+		cfg:        cfg,
+		realRoot:   protectedPath(cfg.Root),
+		providers:  ordered,
+		log:        logger,
+		poll:       time.Second,
+		bootStall:  bootStallWindow,
+		bootResets: maxBootResets,
 		ssh: sshClient{
 			run:      sshexec.Run,
 			upload:   sshexec.Upload,

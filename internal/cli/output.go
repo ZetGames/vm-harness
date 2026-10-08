@@ -102,6 +102,7 @@ func writeMachine(w io.Writer, mach vm.Machine) {
 	field("firmware", mach.Firmware)
 	field("config", mach.ConfigPath)
 	field("snapshot", mach.CurrentSnapshot)
+	field("console", mach.ConsoleLog)
 	field("labels", formatLabels(mach.Labels))
 	for i, nic := range mach.NICs {
 		field("nic"+strconv.Itoa(i+1), formatNIC(nic))
@@ -127,6 +128,11 @@ func writeProviders(w io.Writer, providers []harness.ProviderStatus) {
 			detail = p.Error
 		}
 		fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\n", p.Name, yesNo(p.Available), mark(p.Default), p.Info.Version, detail)
+	}
+	for _, p := range providers {
+		for _, warning := range p.Info.Warnings {
+			fmt.Fprintf(w, "warning: %s: %s\n", p.Name, warning)
+		}
 	}
 }
 

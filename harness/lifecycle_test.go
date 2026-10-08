@@ -174,6 +174,7 @@ func createWithKey(t *testing.T, e *testEnv, name string) vm.Machine {
 func TestFullCloneFixups(t *testing.T) {
 	e := newEnv(t)
 	src := createWithKey(t, e, "src")
+	e.vbox.MaxReliableCPUs = 1
 	srcKey := src.Meta[vm.MetaSSHKey]
 	writeFile(t, srcKey+".known_hosts", "[127.0.0.1]:2222 ssh-ed25519 AAAA")
 	clone, err := e.m.Clone(t.Context(), vboxRef("src"), vm.CloneOptions{Name: "copy"})
@@ -182,6 +183,9 @@ func TestFullCloneFixups(t *testing.T) {
 	}
 	if !clone.Managed || clone.Meta[vm.MetaManaged] != clone.ID || clone.Labels["team"] != "red" || clone.Meta[vm.MetaOSType] != "ubuntu" || clone.Meta[vm.MetaSSHUser] != "vmh" {
 		t.Fatalf("clone meta = %v", clone.Meta)
+	}
+	if src.CPUs != 2 || clone.CPUs != src.CPUs {
+		t.Fatalf("clone has %d cpus, source %d", clone.CPUs, src.CPUs)
 	}
 	if _, ok := clone.Meta[vm.MetaLinkedFrom]; ok {
 		t.Fatal("full clone marked as linked")

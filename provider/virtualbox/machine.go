@@ -123,6 +123,7 @@ func (p *Provider) machine(ctx context.Context, info vmInfo) vm.Machine {
 		NICs:            nicsOf(f),
 		PortForwards:    info.forwards,
 		CurrentSnapshot: f["CurrentSnapshotName"],
+		ConsoleLog:      info.consoleLog(),
 	}
 }
 

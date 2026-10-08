@@ -68,6 +68,7 @@ func TestCreateDefaults(t *testing.T) {
 	cases := []struct {
 		name     string
 		cfg      Config
+		reliable int
 		spec     vm.Spec
 		cpus     int
 		memory   int
@@ -92,10 +93,27 @@ func TestCreateDefaults(t *testing.T) {
 			name: "native type passes through", spec: vm.Spec{Name: "a", OSType: "Gentoo_64"},
 			cpus: 2, memory: 2048, disk: 20, osType: "Gentoo_64", metaType: "Gentoo_64",
 		},
+		{
+			name: "provider boots one vcpu reliably", reliable: 1, spec: vm.Spec{Name: "a"},
+			cpus: 1, memory: 2048, disk: 20, osType: "Linux26_64", metaType: "linux",
+		},
+		{
+			name: "reliable cpus cap configured defaults", cfg: Config{Defaults: Defaults{CPUs: 4}}, reliable: 1,
+			spec: vm.Spec{Name: "a"}, cpus: 1, memory: 2048, disk: 20, osType: "Linux26_64", metaType: "linux",
+		},
+		{
+			name: "explicit cpus beat reliable cpus", reliable: 1, spec: vm.Spec{Name: "a", CPUs: 2},
+			cpus: 2, memory: 2048, disk: 20, osType: "Linux26_64", metaType: "linux",
+		},
+		{
+			name: "reliable cpus above the default", reliable: 4, spec: vm.Spec{Name: "a"},
+			cpus: 2, memory: 2048, disk: 20, osType: "Linux26_64", metaType: "linux",
+		},
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
 			rec := &recorder{Provider: memprovider.New(vm.VirtualBox)}
+			rec.MaxReliableCPUs = c.reliable
 			m := newManager(t, c.cfg, rec)
 			got, err := m.Create(t.Context(), c.spec)
 			if err != nil {
@@ -120,18 +138,32 @@ func TestCreateDefaults(t *testing.T) {
 
 func TestCreateApplianceKeepsItsOwnSizing(t *testing.T) {
 	ova := writeFile(t, filepath.Join(t.TempDir(), "box.ova"), "ova")
-	rec := &recorder{Provider: memprovider.New(vm.VirtualBox)}
-	m := newManager(t, Config{}, rec)
-	got, err := m.Create(t.Context(), vm.Spec{Name: "imported", Appliance: ova})
-	if err != nil {
-		t.Fatal(err)
+	cases := []struct {
+		name           string
+		reliable, cpus int
+		want           int
+	}{
+		{name: "no cpu limit", want: 0},
+		{name: "provider boots one vcpu reliably", reliable: 1, want: 1},
+		{name: "explicit cpus beat reliable cpus", reliable: 1, cpus: 3, want: 3},
 	}
-	spec := rec.last(t)
-	if spec.CPUs != 0 || spec.MemoryMB != 0 || spec.DiskGB != 0 || spec.OSType != "" {
-		t.Fatalf("appliance spec got defaults: %+v", spec)
-	}
-	if _, ok := got.Meta[vm.MetaOSType]; ok {
-		t.Fatalf("os_type recorded without a request: %v", got.Meta)
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			rec := &recorder{Provider: memprovider.New(vm.VirtualBox)}
+			rec.MaxReliableCPUs = c.reliable
+			m := newManager(t, Config{Defaults: Defaults{CPUs: 4}}, rec)
+			got, err := m.Create(t.Context(), vm.Spec{Name: "imported", Appliance: ova, CPUs: c.cpus, CloudInit: &vm.CloudInit{}})
+			if err != nil {
+				t.Fatal(err)
+			}
+			spec := rec.last(t)
+			if spec.CPUs != c.want || spec.MemoryMB != 0 || spec.DiskGB != 0 || spec.OSType != "" {
+				t.Fatalf("appliance spec = %+v, want %d cpus and no other defaults", spec, c.want)
+			}
+			if _, ok := got.Meta[vm.MetaOSType]; ok {
+				t.Fatalf("os_type recorded without a request: %v", got.Meta)
+			}
+		})
 	}
 }
 

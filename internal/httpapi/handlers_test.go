@@ -542,3 +542,35 @@ func TestPortForwards(t *testing.T) {
 	wantError(t, e.do(http.MethodGet, "/v1/vms/ghost/ports", ""), http.StatusNotFound, "not_found")
 	wantError(t, e.do(http.MethodPost, "/v1/vms/db/ports?provider=vmware", `{"guest_port":22}`), http.StatusNotImplemented, "unsupported")
 }
+
+func TestWaitReturnsRecoveries(t *testing.T) {
+	t.Parallel()
+	e := newEnv(t)
+	path := filepath.Join(t.TempDir(), "serial.log")
+	if err := os.WriteFile(path, []byte("Begin: Loading essential drivers ... "), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	boot := managed("boot", vm.StateRunning)
+	boot.ConsoleLog = path
+	e.vbox.Put(boot)
+	booted := false
+	e.vbox.ResetFunc = func(vm.Machine) { booted = true }
+	e.vbox.ExecFunc = func(vm.Machine, vm.ExecRequest) (vm.ExecResult, error) {
+		if booted {
+			return vm.ExecResult{}, nil
+		}
+		log, err := os.OpenFile(path, os.O_APPEND|os.O_WRONLY, 0)
+		if err != nil {
+			return vm.ExecResult{}, err
+		}
+		defer log.Close()
+		if _, err := log.WriteString("\r\nKernel panic - not syncing: VFS: Unable to mount root fs\r\n"); err != nil {
+			return vm.ExecResult{}, err
+		}
+		return vm.ExecResult{}, vm.ErrNotReady
+	}
+	res := decode[harness.WaitResult](t, e.do(http.MethodPost, "/v1/vms/boot/wait", `{"for":"guest","user":"root","password":"pw","timeout_sec":10}`), http.StatusOK)
+	if !slices.Equal(res.Recoveries, []string{"kernel panic: VFS: Unable to mount root fs — reset"}) {
+		t.Fatalf("wait = %+v", res)
+	}
+}

@@ -39,6 +39,16 @@ func (p *Provider) GuestIP(ctx context.Context, ref string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	ip, err := p.toolsIP(ctx, path)
+	if errors.Is(err, vm.ErrNotReady) {
+		if leased := p.leasedIP(path); leased != "" {
+			return leased, nil
+		}
+	}
+	return ip, err
+}
+
+func (p *Provider) toolsIP(ctx context.Context, path string) (string, error) {
 	out, err := p.vmrunCmd(ctx, "getGuestIPAddress", path)
 	if err != nil {
 		return "", err
