@@ -10,8 +10,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/fl4metf/vm-harness/internal/shellquote"
-	"github.com/fl4metf/vm-harness/vm"
+	"github.com/ZetGames/vm-harness/internal/shellquote"
+	"github.com/ZetGames/vm-harness/vm"
 )
 
 func runBatch(t *testing.T, req vm.ExecRequest) ([]byte, error) {

@@ -10,8 +10,8 @@ import (
 	"path/filepath"
 	"strconv"
 
-	"github.com/fl4metf/vm-harness/internal/strictjson"
-	"github.com/fl4metf/vm-harness/vm"
+	"github.com/ZetGames/vm-harness/internal/strictjson"
+	"github.com/ZetGames/vm-harness/vm"
 )
 
 type Config struct {

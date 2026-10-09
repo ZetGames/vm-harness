@@ -12,9 +12,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/fl4metf/vm-harness/internal/fakerun"
-	"github.com/fl4metf/vm-harness/runner"
-	"github.com/fl4metf/vm-harness/vm"
+	"github.com/ZetGames/vm-harness/internal/fakerun"
+	"github.com/ZetGames/vm-harness/runner"
+	"github.com/ZetGames/vm-harness/vm"
 )
 
 var update = flag.Bool("update", false, "rewrite golden files in testdata")

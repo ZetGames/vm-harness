@@ -7,7 +7,7 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/fl4metf/vm-harness/vm"
+	"github.com/ZetGames/vm-harness/vm"
 )
 
 func (p *Provider) control(ctx context.Context, ref string, args ...string) error {

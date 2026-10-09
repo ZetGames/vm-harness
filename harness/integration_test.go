@@ -16,9 +16,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/fl4metf/vm-harness/internal/iso9660"
-	"github.com/fl4metf/vm-harness/provider/virtualbox"
-	"github.com/fl4metf/vm-harness/vm"
+	"github.com/ZetGames/vm-harness/internal/iso9660"
+	"github.com/ZetGames/vm-harness/provider/virtualbox"
+	"github.com/ZetGames/vm-harness/vm"
 )
 
 type ownedVMs struct {

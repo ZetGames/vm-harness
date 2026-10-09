@@ -7,8 +7,8 @@ import (
 	"io"
 	"strings"
 
-	"github.com/fl4metf/vm-harness/harness"
-	"github.com/fl4metf/vm-harness/vm"
+	"github.com/ZetGames/vm-harness/harness"
+	"github.com/ZetGames/vm-harness/vm"
 	"github.com/modelcontextprotocol/go-sdk/jsonrpc"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )

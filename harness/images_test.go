@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/fl4metf/vm-harness/vm"
+	"github.com/ZetGames/vm-harness/vm"
 )
 
 func sparseVMDK(descriptor string, atEnd bool) string {

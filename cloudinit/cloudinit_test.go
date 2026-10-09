@@ -12,10 +12,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/fl4metf/vm-harness/cloudinit"
-	"github.com/fl4metf/vm-harness/internal/iso9660"
-	"github.com/fl4metf/vm-harness/internal/secfile/secfiletest"
-	"github.com/fl4metf/vm-harness/vm"
+	"github.com/ZetGames/vm-harness/cloudinit"
+	"github.com/ZetGames/vm-harness/internal/iso9660"
+	"github.com/ZetGames/vm-harness/internal/secfile/secfiletest"
+	"github.com/ZetGames/vm-harness/vm"
 )
 
 const (

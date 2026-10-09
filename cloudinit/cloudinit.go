@@ -11,9 +11,9 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"github.com/fl4metf/vm-harness/internal/iso9660"
-	"github.com/fl4metf/vm-harness/internal/secfile"
-	"github.com/fl4metf/vm-harness/vm"
+	"github.com/ZetGames/vm-harness/internal/iso9660"
+	"github.com/ZetGames/vm-harness/internal/secfile"
+	"github.com/ZetGames/vm-harness/vm"
 )
 
 const (

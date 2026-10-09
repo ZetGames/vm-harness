@@ -7,8 +7,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/fl4metf/vm-harness/internal/memprovider"
-	"github.com/fl4metf/vm-harness/vm"
+	"github.com/ZetGames/vm-harness/internal/memprovider"
+	"github.com/ZetGames/vm-harness/vm"
 )
 
 func TestResolve(t *testing.T) {

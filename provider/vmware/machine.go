@@ -13,7 +13,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/fl4metf/vm-harness/vm"
+	"github.com/ZetGames/vm-harness/vm"
 )
 
 func (p *Provider) Get(ctx context.Context, ref string) (vm.Machine, error) {

@@ -13,7 +13,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/fl4metf/vm-harness/vm"
+	"github.com/ZetGames/vm-harness/vm"
 )
 
 const (

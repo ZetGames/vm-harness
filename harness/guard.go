@@ -8,8 +8,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/fl4metf/vm-harness/internal/flock"
-	"github.com/fl4metf/vm-harness/vm"
+	"github.com/ZetGames/vm-harness/internal/flock"
+	"github.com/ZetGames/vm-harness/vm"
 )
 
 type lockTable struct {

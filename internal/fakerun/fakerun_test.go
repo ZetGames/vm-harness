@@ -5,7 +5,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/fl4metf/vm-harness/runner"
+	"github.com/ZetGames/vm-harness/runner"
 )
 
 func TestRulesAndSequences(t *testing.T) {

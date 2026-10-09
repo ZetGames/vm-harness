@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/fl4metf/vm-harness/vm"
+	"github.com/ZetGames/vm-harness/vm"
 )
 
 const defaultWaitTimeout = 5 * time.Minute

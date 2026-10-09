@@ -11,9 +11,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/fl4metf/vm-harness/internal/secfile"
-	"github.com/fl4metf/vm-harness/internal/sshexec"
-	"github.com/fl4metf/vm-harness/vm"
+	"github.com/ZetGames/vm-harness/internal/secfile"
+	"github.com/ZetGames/vm-harness/internal/sshexec"
+	"github.com/ZetGames/vm-harness/vm"
 )
 
 const knownHostsSuffix = ".known_hosts"

@@ -6,7 +6,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/fl4metf/vm-harness/runner"
+	"github.com/ZetGames/vm-harness/runner"
 )
 
 type Call struct {

@@ -11,8 +11,8 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/fl4metf/vm-harness/provider/vmware"
-	"github.com/fl4metf/vm-harness/vm"
+	"github.com/ZetGames/vm-harness/provider/vmware"
+	"github.com/ZetGames/vm-harness/vm"
 )
 
 var foldCase = runtime.GOOS == "windows" || runtime.GOOS == "darwin"

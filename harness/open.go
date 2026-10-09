@@ -3,9 +3,9 @@ package harness
 import (
 	"path/filepath"
 
-	"github.com/fl4metf/vm-harness/provider/virtualbox"
-	"github.com/fl4metf/vm-harness/provider/vmware"
-	"github.com/fl4metf/vm-harness/vm"
+	"github.com/ZetGames/vm-harness/provider/virtualbox"
+	"github.com/ZetGames/vm-harness/provider/vmware"
+	"github.com/ZetGames/vm-harness/vm"
 )
 
 func Open(cfg Config) *Manager {

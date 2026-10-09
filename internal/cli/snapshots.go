@@ -7,7 +7,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/fl4metf/vm-harness/harness"
+	"github.com/ZetGames/vm-harness/harness"
 )
 
 func (a *app) snapCommand() *cobra.Command {

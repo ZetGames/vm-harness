@@ -10,7 +10,7 @@ import (
 	"syscall"
 	"testing"
 
-	"github.com/fl4metf/vm-harness/vm"
+	"github.com/ZetGames/vm-harness/vm"
 )
 
 const argvHelperEnv = "VMH_VBOX_ARGV_HELPER"

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"slices"
 
-	"github.com/fl4metf/vm-harness/vm"
+	"github.com/ZetGames/vm-harness/vm"
 )
 
 const maxSnapshotDescription = 1024

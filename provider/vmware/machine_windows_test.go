@@ -5,8 +5,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/fl4metf/vm-harness/internal/fakerun"
-	"github.com/fl4metf/vm-harness/vm"
+	"github.com/ZetGames/vm-harness/internal/fakerun"
+	"github.com/ZetGames/vm-harness/vm"
 	"golang.org/x/sys/windows"
 )
 

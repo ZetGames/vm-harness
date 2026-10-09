@@ -13,8 +13,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/fl4metf/vm-harness/cloudinit"
-	"github.com/fl4metf/vm-harness/vm"
+	"github.com/ZetGames/vm-harness/cloudinit"
+	"github.com/ZetGames/vm-harness/vm"
 )
 
 const parseScript = `set -e

@@ -13,8 +13,8 @@ import (
 
 	"golang.org/x/crypto/ssh"
 
-	"github.com/fl4metf/vm-harness/internal/secfile"
-	"github.com/fl4metf/vm-harness/vm"
+	"github.com/ZetGames/vm-harness/internal/secfile"
+	"github.com/ZetGames/vm-harness/vm"
 )
 
 const keyComment = "vmh"

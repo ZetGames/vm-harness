@@ -10,8 +10,8 @@ import (
 	"slices"
 	"unicode/utf8"
 
-	"github.com/fl4metf/vm-harness/internal/sshexec"
-	"github.com/fl4metf/vm-harness/vm"
+	"github.com/ZetGames/vm-harness/internal/sshexec"
+	"github.com/ZetGames/vm-harness/vm"
 )
 
 const (

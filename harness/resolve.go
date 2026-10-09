@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/fl4metf/vm-harness/vm"
+	"github.com/ZetGames/vm-harness/vm"
 )
 
 var errNoProvider = fmt.Errorf("no hypervisor is available, install VirtualBox or VMware: %w", vm.ErrUnavailable)

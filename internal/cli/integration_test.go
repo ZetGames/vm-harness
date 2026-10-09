@@ -11,10 +11,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/fl4metf/vm-harness/harness"
-	"github.com/fl4metf/vm-harness/provider/virtualbox"
-	"github.com/fl4metf/vm-harness/provider/vmware"
-	"github.com/fl4metf/vm-harness/vm"
+	"github.com/ZetGames/vm-harness/harness"
+	"github.com/ZetGames/vm-harness/provider/virtualbox"
+	"github.com/ZetGames/vm-harness/provider/vmware"
+	"github.com/ZetGames/vm-harness/vm"
 )
 
 type ownedVMs struct {

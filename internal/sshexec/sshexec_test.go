@@ -16,8 +16,8 @@ import (
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/knownhosts"
 
-	"github.com/fl4metf/vm-harness/internal/secfile/secfiletest"
-	"github.com/fl4metf/vm-harness/vm"
+	"github.com/ZetGames/vm-harness/internal/secfile/secfiletest"
+	"github.com/ZetGames/vm-harness/vm"
 )
 
 func TestRunExitCodeAndOutput(t *testing.T) {

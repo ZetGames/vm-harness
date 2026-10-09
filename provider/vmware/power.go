@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/fl4metf/vm-harness/vm"
+	"github.com/ZetGames/vm-harness/vm"
 )
 
 var errPortForward = fmt.Errorf("vmware nat port forwarding is set per host network, not per vm: %w", vm.ErrUnsupported)

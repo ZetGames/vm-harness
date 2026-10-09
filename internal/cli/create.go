@@ -13,9 +13,9 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
-	"github.com/fl4metf/vm-harness/harness"
-	"github.com/fl4metf/vm-harness/internal/strictjson"
-	"github.com/fl4metf/vm-harness/vm"
+	"github.com/ZetGames/vm-harness/harness"
+	"github.com/ZetGames/vm-harness/internal/strictjson"
+	"github.com/ZetGames/vm-harness/vm"
 )
 
 const createHelp = `Create a managed VM. The boot disk comes from one of:

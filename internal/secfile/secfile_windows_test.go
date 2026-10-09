@@ -7,7 +7,7 @@ import (
 
 	"golang.org/x/sys/windows"
 
-	"github.com/fl4metf/vm-harness/internal/secfile"
+	"github.com/ZetGames/vm-harness/internal/secfile"
 )
 
 func TestRestrictDisablesInheritance(t *testing.T) {

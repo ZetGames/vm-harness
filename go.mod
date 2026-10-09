@@ -1,4 +1,4 @@
-module github.com/fl4metf/vm-harness
+module github.com/ZetGames/vm-harness
 
 go 1.24.0
 

@@ -13,8 +13,8 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
-	"github.com/fl4metf/vm-harness/harness"
-	"github.com/fl4metf/vm-harness/vm"
+	"github.com/ZetGames/vm-harness/harness"
+	"github.com/ZetGames/vm-harness/vm"
 )
 
 const execHelp = `Run a command in a VM. Put the command after --, or pass a shell script with

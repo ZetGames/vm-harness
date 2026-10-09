@@ -15,9 +15,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/fl4metf/vm-harness/internal/hostinfo"
-	"github.com/fl4metf/vm-harness/runner"
-	"github.com/fl4metf/vm-harness/vm"
+	"github.com/ZetGames/vm-harness/internal/hostinfo"
+	"github.com/ZetGames/vm-harness/runner"
+	"github.com/ZetGames/vm-harness/vm"
 )
 
 type Options struct {

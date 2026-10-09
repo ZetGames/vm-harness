@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/fl4metf/vm-harness/vm"
+	"github.com/ZetGames/vm-harness/vm"
 )
 
 func Decode(r io.Reader, v any) error {

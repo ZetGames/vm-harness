@@ -7,8 +7,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/fl4metf/vm-harness/internal/secfile"
-	"github.com/fl4metf/vm-harness/internal/secfile/secfiletest"
+	"github.com/ZetGames/vm-harness/internal/secfile"
+	"github.com/ZetGames/vm-harness/internal/secfile/secfiletest"
 )
 
 func TestRestrictFile(t *testing.T) {

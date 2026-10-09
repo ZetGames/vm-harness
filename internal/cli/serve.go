@@ -16,10 +16,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/fl4metf/vm-harness/harness"
-	"github.com/fl4metf/vm-harness/internal/httpapi"
-	"github.com/fl4metf/vm-harness/internal/mcpserver"
-	"github.com/fl4metf/vm-harness/internal/secfile"
+	"github.com/ZetGames/vm-harness/harness"
+	"github.com/ZetGames/vm-harness/internal/httpapi"
+	"github.com/ZetGames/vm-harness/internal/mcpserver"
+	"github.com/ZetGames/vm-harness/internal/secfile"
 )
 
 const serveHelp = `Serve the vmh REST API (JSON over HTTP, routes under /v1) until interrupted.

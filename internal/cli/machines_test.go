@@ -11,7 +11,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/fl4metf/vm-harness/vm"
+	"github.com/ZetGames/vm-harness/vm"
 )
 
 func names(machines []vm.Machine) []string {

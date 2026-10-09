@@ -14,9 +14,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/fl4metf/vm-harness/harness"
-	"github.com/fl4metf/vm-harness/internal/secfile/secfiletest"
-	"github.com/fl4metf/vm-harness/vm"
+	"github.com/ZetGames/vm-harness/harness"
+	"github.com/ZetGames/vm-harness/internal/secfile/secfiletest"
+	"github.com/ZetGames/vm-harness/vm"
 )
 
 func TestServeRefusesPublicAddressWithoutToken(t *testing.T) {

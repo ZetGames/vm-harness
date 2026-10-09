@@ -14,9 +14,9 @@ import (
 	"testing"
 	"testing/iotest"
 
-	"github.com/fl4metf/vm-harness/harness"
-	"github.com/fl4metf/vm-harness/internal/memprovider"
-	"github.com/fl4metf/vm-harness/vm"
+	"github.com/ZetGames/vm-harness/harness"
+	"github.com/ZetGames/vm-harness/internal/memprovider"
+	"github.com/ZetGames/vm-harness/vm"
 )
 
 func names(machines []vm.Machine) []string {

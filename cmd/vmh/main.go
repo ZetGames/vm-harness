@@ -3,7 +3,7 @@ package main
 import (
 	"os"
 
-	"github.com/fl4metf/vm-harness/internal/cli"
+	"github.com/ZetGames/vm-harness/internal/cli"
 )
 
 func main() {

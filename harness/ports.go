@@ -6,7 +6,7 @@ import (
 	"net"
 	"slices"
 
-	"github.com/fl4metf/vm-harness/vm"
+	"github.com/ZetGames/vm-harness/vm"
 )
 
 func (m *Manager) AddPortForward(ctx context.Context, ref Ref, pf vm.PortForward) (vm.PortForward, error) {
